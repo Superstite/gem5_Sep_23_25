@@ -26,7 +26,7 @@ from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import
 from gem5.components.processors.linear_generator import LinearGenerator
 from gem5.components.memory import SingleChannelDDR3_1600
 
-
+MESI_Two_Level_DEBUG = True
 # size_choices = ["simsmall", "simmedium", "simlarge"]
 
 parser = argparse.ArgumentParser(
@@ -38,6 +38,8 @@ parser.add_argument(
     "generator_cores", type=int, help="The number of generator cores to use."
 )
 
+if MESI_Two_Level_DEBUG:
+    print("MESI_Two_Level_DEBUG is Enabled. It has 2 directory controllers")
 # parser.add_argument(
 #     "network_class",
 #     type=str,
@@ -95,7 +97,7 @@ cache_hierarchy = MESITwoLevelCacheNetwork(
     l1i_assoc=8,
     l2_size="256kB",
     l2_assoc=16,
-    num_l2_banks=2
+    num_l2_banks=2,
 )
 #Sneha_Feb1_23
 # cache_hierarchy = cache_factory()

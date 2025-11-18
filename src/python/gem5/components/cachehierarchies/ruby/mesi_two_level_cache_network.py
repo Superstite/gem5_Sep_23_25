@@ -260,6 +260,8 @@ from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
 
 from .topologies.garnet_mesh import GarnetMesh
 # from .topologies.garnet_mesh_Sneha_Rivu import GarnetMesh      #Not working, dont know why
+
+MESI_Two_Level_DEBUG = True
 class MESITwoLevelCacheNetwork(
     AbstractRubyCacheHierarchy, AbstractTwoLevelCacheHierarchy
 ):
@@ -279,8 +281,7 @@ class MESITwoLevelCacheNetwork(
         l1d_assoc: str,
         l2_size: str,
         l2_assoc: str,
-        num_l2_banks: int,
-        
+        num_l2_banks: int,      
     ):
         AbstractRubyCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
@@ -325,36 +326,6 @@ class MESITwoLevelCacheNetwork(
                 board.processor.get_isa(),
                 board.get_clock_domain(),
             )
-        # self._l1_controllers = []
-        # for i, core in enumerate(board.get_processor().get_cores()):
-        #     if(i==10):
-        #         cache = L1Cache(
-        #             self._l1i_size,
-        #             self._l1i_assoc,
-        #             self._l1d_size,
-        #             self._l1d_assoc,
-        #             self.ruby_system.network,
-        #             core,
-        #             self._num_l2_banks,
-        #             cache_line_size,
-        #             board.processor.get_isa(),
-        #             clk_domain=GarnetMesh.domain0
-        #         )
-        #     else:
-        #         cache = L1Cache(
-        #             self._l1i_size,
-        #             self._l1i_assoc,
-        #             self._l1d_size,
-        #             self._l1d_assoc,
-        #             self.ruby_system.network,
-        #             core,
-        #             self._num_l2_banks,
-        #             cache_line_size,
-        #             board.processor.get_isa(),
-        #             board.get_clock_domain(),
-        #         )                
-
-
             cache.sequencer = RubySequencer(
                 version=i, dcache=cache.L1Dcache, clk_domain=cache.clk_domain
             )
@@ -426,12 +397,12 @@ class MESITwoLevelCacheNetwork(
         if len(self._dma_controllers) != 0:
             self.ruby_system.dma_controllers = self._dma_controllers
 
-        #Sneha_Mar21_23
-        print("Number of l1 controllers = ", len(self._l1_controllers))
-        print("Number of l2 controllers = ", len(self._l2_controllers))
-        print("Number of directory controllers = ", len(self._directory_controllers))
-        print("Number of dma controllers = ", len(self._dma_controllers))
-        #Sneha_Mar21_23
+        if MESI_Two_Level_DEBUG:
+            print("Number of l1 controllers = ", len(self._l1_controllers))
+            print("Number of l2 controllers = ", len(self._l2_controllers))
+            print("Number of directory controllers = ", len(self._directory_controllers))
+            print("Number of dma controllers = ", len(self._dma_controllers))
+
         # Create the network and connect the controllers.
         # self.ruby_system.network.connectControllers(
         #     self._l1_controllers
@@ -439,12 +410,13 @@ class MESITwoLevelCacheNetwork(
         #     + self._directory_controllers
         #     + self._dma_controllers, len(self._l1_controllers)
         # )
-
+        first_dir_loc = 21
+        second_dir_loc = 42
         self.ruby_system.network.connectControllers(
             self._l1_controllers,
             self._l2_controllers,
             self._directory_controllers,
-            self._dma_controllers, len(self._l1_controllers)
+            self._dma_controllers, len(self._l1_controllers), first_dir_loc, second_dir_loc,
         )
 
         # Set up a proxy port for the system_port. Used for load binaries and

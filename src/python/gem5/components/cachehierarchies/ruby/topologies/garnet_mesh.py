@@ -168,15 +168,14 @@
 #         self.int_links = int_links
 
 
-#Sneha_Feb11_22
 import math
-#Sneha_Feb11_22
 from m5.params import *
 from m5.objects import *
 
 from m5.objects import GarnetNetwork, GarnetExtLink, GarnetIntLink, \
                         GarnetRouter, GarnetNetworkInterface
 
+MESI_Two_Level_debug = True
 class GarnetMesh(GarnetNetwork):
 
     def __init__(self, ruby_system):
@@ -185,20 +184,17 @@ class GarnetMesh(GarnetNetwork):
 
     # Makes a generic mesh
 
-    def connectControllers(self, l1controllers, l2controllers, dircontrollers, dmacontrollers, ncpu):
+    def connectControllers(self, l1controllers, l2controllers, dircontrollers, dmacontrollers, ncpu, first_dir_loc, second_dir_loc):
         num_routers = ncpu
-        #Sneha_Feb11_22
-        # num_rows = 12
-        num_rows = 8
-        print("Number of rows=", num_rows)
-        #num_rows = 2
-        #Sneha_Feb11_22
+        num_rows = math.isqrt(ncpu)
+        if MESI_Two_Level_debug:
+            print("Number of rows=", num_rows)
         nodes = l1controllers+l2controllers+dircontrollers+dmacontrollers
 
         # default values for link latency and router latency.
         # Can be over-ridden on a per link/router basis
         # link_latency = 8                                            
-        link_latency = 4                                            #Sneha, done to check functional read not implemented
+        link_latency = 4                                            
         router_latency = 1
 
         # There must be an evenly divisible number of controllers to routers
@@ -235,26 +231,20 @@ class GarnetMesh(GarnetNetwork):
                                     latency = link_latency))
             link_count += 1
 
-        c=21
-        # c=6
+        c=first_dir_loc
         for (i, n) in enumerate(l2controllers):
             ext_links.append(GarnetExtLink(link_id=link_count, ext_node=n, 
             int_node=self.routers[c],
             latency = link_latency))
-            # c=74
             c=42
-            # c=9
             link_count += 1
 
-        c=21
-        # c=6
+        c=second_dir_loc
         for (i, n) in enumerate(dircontrollers):
             ext_links.append(GarnetExtLink(link_id=link_count, ext_node=n, 
             int_node=self.routers[c],
             latency = link_latency))
-            # c=74
             c=42
-            # c=9
             link_count += 1
 
         # Connect the remaining nodes to router 0.  These should only be
