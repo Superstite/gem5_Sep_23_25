@@ -68,6 +68,7 @@ structure(RequestMsg, desc="...", interface="Message") {
   int Len;
   bool Dirty, default="false",  desc="Dirty bit";
   PrefetchBit Prefetch,         desc="Is this a prefetch request";
+  MachineID global_pe_id, desc="Global PE/CPU Id";
 
   bool functionalRead(Packet *pkt) {
     // Only PUTX messages contains the data block

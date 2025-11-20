@@ -50,7 +50,7 @@
 #include "mem/mem_interface.hh"
 #include "mem/nvm_interface.hh"
 #include "sim/system.hh"
-
+#include "debug/MESI_Two_Level_NoC.hh" 
 namespace gem5
 {
 
@@ -409,6 +409,8 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     // This is where we enter from the outside world
     DPRINTF(MemCtrl, "recvTimingReq: request %s addr %#x size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+
+    DPRINTF(MESI_Two_Level_NoC, "Printing from recvTimingReq %d\n", pkt->requestorId());
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");

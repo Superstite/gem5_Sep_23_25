@@ -318,6 +318,8 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Sender := in_msg.Requestor;
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.Len := 0;
+        out_msg.global_pe_id := in_msg.global_pe_id;
+        DPRINTF(SLICC_debug, "Printing from MESI_Two_Leveldir %d\n", out_msg.global_pe_id);
       }
     }
   }

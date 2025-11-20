@@ -75,9 +75,10 @@ class SEBinaryWorkload:
     ) -> Process:
 
         process = Process(pid=pid)
-        binary_path = binary.get_local_path()
-        process.executable = binary_path
-        process.cmd = [binary_path] + arguments
+        # binary_path = binary.get_local_path()
+        # process.executable = binary_path
+        process.executable = binary
+        process.cmd = [binary] + arguments
         if stdin_file is not None:
             process.input = stdin_file.get_local_path()
         if stdout_file is not None:
@@ -264,36 +265,130 @@ class SEBinaryWorkload:
         # SE-mode simulation.
         self._set_fullsystem(False)
 
-        process = self._create_process(
-            binary=binary,
+        binary1 = ('/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/automotive/susan/susan')
+        arguments1 = ['/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/automotive/susan/susan/input_large.pgm', '/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/automotive/susan/output_large.smoothing.pgm', '-s']
+
+        binary2 = ('/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/automotive/qsort/qsort_large')
+        arguments2 = ['/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/automotive/qsort/input_large.dat']
+
+        binary3 = ('/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/automotive/bitcount/bitcnts')
+        arguments3 = ['bitcnts', '1125000']
+
+        binary4 = ('/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/automotive/basicmath/basicmath_small')
+        arguments4 = ['']
+
+        binary5 = ('/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/telecomm/CRC32/crc')
+        arguments5 = ['/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/telecomm/adpcm/data/large.pcm']
+
+        binary6 = ('/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/network/dijkstra/dijkstra_large')
+        arguments6 = ['/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/network/dijkstra/input.dat']
+
+        binary7 = ('/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/network/patricia/patricia')
+        arguments7 = ['/home/sneha/Github_Repos/gem5_Sep_23_25/mibench/network/patricia/large.udp']
+
+        process1 = self._create_process(
+            binary=binary1,
             pid=100,
-            arguments=arguments,
+            arguments=arguments1,
             stdin_file=stdin_file,
             stdout_file=stdout_file,
             stderr_file=stderr_file,
             env_list=env_list,
         )
 
-        self.workload = SEWorkload.init_compatible(binary.get_local_path())
+        process2 = self._create_process(
+            binary=binary2,
+            pid=200,
+            arguments=arguments2,
+            stdin_file=stdin_file,
+            stdout_file=stdout_file,
+            stderr_file=stderr_file,
+            env_list=env_list,
+        )
+        process3 = self._create_process(
+            binary=binary3,
+            pid=300,
+            arguments=arguments3,
+            stdin_file=stdin_file,
+            stdout_file=stdout_file,
+            stderr_file=stderr_file,
+            env_list=env_list,
+        )
+        process4 = self._create_process(
+            binary=binary4,
+            pid=400,
+            arguments=arguments4,
+            stdin_file=stdin_file,
+            stdout_file=stdout_file,
+            stderr_file=stderr_file,
+            env_list=env_list,
+        )
+        process5 = self._create_process(
+            binary=binary5,
+            pid=500,
+            arguments=arguments5,
+            stdin_file=stdin_file,
+            stdout_file=stdout_file,
+            stderr_file=stderr_file,
+            env_list=env_list,
+        )
+        process6 = self._create_process(
+            binary=binary6,
+            pid=600,
+            arguments=arguments6,
+            stdin_file=stdin_file,
+            stdout_file=stdout_file,
+            stderr_file=stderr_file,
+            env_list=env_list,
+        )
+        process7 = self._create_process(
+            binary=binary7,
+            pid=700,
+            arguments=arguments7,
+            stdin_file=stdin_file,
+            stdout_file=stdout_file,
+            stderr_file=stderr_file,
+            env_list=env_list,
+        )
+        # self.workload = SEWorkload.init_compatible(binary.get_local_path())
+        self.workload = SEWorkload.init_compatible(binary1)
         self.m5ops_base = max(0xFFFF0000, self.get_memory().get_size())
 
-        if isinstance(self.get_processor(), SwitchableProcessor):
-            # This is a hack to get switchable processors working correctly in
-            # SE mode. The "get_cores" API for processors only gets the current
-            # switched-in cores and, in most cases, this is what the script
-            # required. In the case there are switched-out cores via the
-            # SwitchableProcessor, we sometimes need to apply things to ALL
-            # cores (switched-in or switched-out). In this case we have an
-            # `__all_cores` function. Here we must apply the process to every
-            # core.
-            #
-            # A better API for this which avoids `isinstance` checks would be
-            # welcome.
-            for core in self.get_processor()._all_cores():
-                core.set_workload(process)
-        else:
-            for core in self.get_processor().get_cores():
-                core.set_workload(process)
+        # if isinstance(self.get_processor(), SwitchableProcessor):
+        #     # This is a hack to get switchable processors working correctly in
+        #     # SE mode. The "get_cores" API for processors only gets the current
+        #     # switched-in cores and, in most cases, this is what the script
+        #     # required. In the case there are switched-out cores via the
+        #     # SwitchableProcessor, we sometimes need to apply things to ALL
+        #     # cores (switched-in or switched-out). In this case we have an
+        #     # `__all_cores` function. Here we must apply the process to every
+        #     # core.
+        #     #
+        #     # A better API for this which avoids `isinstance` checks would be
+        #     # welcome.
+        #     for core in self.get_processor()._all_cores():
+        #         core.set_workload(process)
+        # else:
+        #     for core in self.get_processor().get_cores():
+        #         core.set_workload(process)
+
+        for c, core in enumerate(self.get_processor().get_cores()):
+            if(c==0 or c==6 or c==12):
+                core.set_workload(process1)
+            elif(c==1 or c==7 or c==13):
+                core.set_workload(process2)
+            elif(c==2 or c==8 or c==14):
+                core.set_workload(process3)
+            elif(c==3 or c==9 or c==15):
+                core.set_workload(process4)
+            elif(c==4 or c==10):
+                core.set_workload(process5) 
+            elif(c==5 or c==11):
+                core.set_workload(process6)           
+            elif(c==16 or c==21 or c==40):
+                core.set_workload(process7)
+            else:
+                core.set_workload(process7)
 
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items

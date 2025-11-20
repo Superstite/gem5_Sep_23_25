@@ -421,6 +421,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
         out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.global_pe_id := in_msg.Requestor;
+        DPRINTF(SLICC_debug, "Printing from MESI_Two_LevelL2cache %d\n", out_msg.global_pe_id);
       }
     }
   }

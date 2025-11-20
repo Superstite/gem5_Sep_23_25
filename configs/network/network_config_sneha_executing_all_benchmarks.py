@@ -143,8 +143,6 @@ memory = DualChannelDDR4_2400(size="8GB")
 # )
 
 processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=args.generator_cores)
-
-print("Processor is defined")
 # board = X86Board(
 #     clk_freq="3GHz",
 #     processor=processor,  # We pass the traffic generator as the processor.
@@ -261,7 +259,7 @@ board = SimpleBoard(
 # binary=CustomResource('/media/sneha/910ba927-5981-470b-b96a-ffc1b9f29a07/sneha/Documents/GitHub/gem5_sneha/mibench/automotive/qsort/qsort_large')
 # binary=CustomResource('/media/sneha/910ba927-5981-470b-b96a-ffc1b9f29a07/sneha/Documents/GitHub/gem5_sneha/mibench/automotive/bitcount/bitcnts')
 #binary=CustomResource('/media/sneha/910ba927-5981-470b-b96a-ffc1b9f29a07/sneha/Documents/GitHub/gem5_sneha/mibench/automotive/basicmath/basicmath_small')
-binary=CustomResource('/home/sneha/Github_Repos/gem5_Sep_23_25/tests/test-progs/hello/bin/x86/linux/hello')
+# binary=CustomResource('/home/sneha/Github_Repos/gem5_Sep_23_25/tests/test-progs/hello/bin/x86/linux/hello')
 #binary=CustomResource('/media/sneha/910ba927-5981-470b-b96a-ffc1b9f29a07/sneha/Documents/GitHub/gem5_sneha/mibench/telecomm/gsm/bin/toast')
 
 # board.set_se_binary_workload(
@@ -327,7 +325,7 @@ binary=CustomResource('/home/sneha/Github_Repos/gem5_Sep_23_25/tests/test-progs/
 #     # resources. Jira ticket: https://gem5.atlassian.net/browse/GEM5-1096
 #     #Resource("arm-hello64-static")
 # )
-
+binary = ' '
 ############ CRC ##############
 board.set_se_binary_workload(binary=binary,
     # The `Resource` class reads the `resources.json` file from the gem5
