@@ -734,4 +734,3 @@ Gem5('gem5', with_any_tags('gem5 lib', 'main'))
 for env in (envs[e] for e in needed_envs):
     for cls in TopLevelMeta.all:
         cls.declare_all(env)
-DebugFlag('MESI_Two_Level_NoC')

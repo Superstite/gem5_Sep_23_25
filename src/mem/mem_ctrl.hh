@@ -312,6 +312,9 @@ class MemCtrl : public qos::MemCtrl
                         bool& retry_rd_req);
     EventFunctionWrapper respondEvent;
 
+    void processMFDFAEvent();
+    EventFunctionWrapper MFDFAEvent;
+
     /**
      * Check if the read queue has room for more entries
      *
@@ -490,6 +493,8 @@ class MemCtrl : public qos::MemCtrl
      * be added together.
      */
     std::deque<MemPacket*> respQueue;
+
+    std::map<int, int> ReqPktPerGlobalID; // Creates a map of how many request packets are there in Queue per global_pe_id
 
     /**
      * Holds count of commands issued in burst window starting at

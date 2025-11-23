@@ -65,6 +65,7 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
                          respondEvent, nextReqEvent, retryWrReq);}, name()),
     respondEvent([this] {processRespondEvent(dram, respQueue,
                          respondEvent, retryRdReq); }, name()),
+    MFDFAEvent([this] {processMFDFAEvent();}, name()),
     dram(p.dram),
     readBufferSize(dram->readBufferSize),
     writeBufferSize(dram->writeBufferSize),
@@ -119,6 +120,7 @@ MemCtrl::startup()
         // start of simulation
         dram->nextBurstAt = curTick() + dram->commandOffset();
     }
+    schedule(MFDFAEvent, 47740000);
 }
 
 Tick
@@ -410,7 +412,8 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     DPRINTF(MemCtrl, "recvTimingReq: request %s addr %#x size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
-    DPRINTF(MESI_Two_Level_NoC, "Printing from recvTimingReq %d\n", pkt->requestorId());
+    // DPRINTF(MESI_Two_Level_NoC, "Printing from src/mem/mem_ctrl.cc pkt global_pe_id %d\n", pkt->global_pe_id);
+    ReqPktPerGlobalID[pkt->global_pe_id] += 1;
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
@@ -1474,6 +1477,11 @@ MemCtrl::getAddrRanges()
     AddrRangeList range;
     range.push_back(dram->getAddrRange());
     return range;
+}
+
+void MemCtrl::processMFDFAEvent()
+{
+    DPRINTF(MESI_Two_Level_NoC, "Hello World! Proessing MFDFA Event.\n");
 }
 
 MemCtrl::MemoryPort::

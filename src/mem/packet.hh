@@ -376,7 +376,7 @@ class Packet : public Printable, public Extensible<Packet>
     /// A pointer to the original request.
     RequestPtr req;
 
-    int global_pe_id;
+    uint8_t global_pe_id;
 
   private:
    /**
