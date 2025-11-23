@@ -422,7 +422,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.AccessMode := in_msg.AccessMode;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.global_pe_id := in_msg.Requestor;
-        DPRINTF(SLICC_debug, "Printing from MESI_Two_LevelL2cache %d\n", out_msg.global_pe_id);
+        //DPRINTF(SLICC_debug, "Printing from MESI_Two_LevelL2cache global_pe_id %d\n", out_msg.global_pe_id);
       }
     }
   }
@@ -436,6 +436,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Requestor := in_msg.Requestor;
         out_msg.Destination.add(cache_entry.Exclusive);
         out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.global_pe_id := in_msg.Requestor;
       }
     }
   }

@@ -46,7 +46,7 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "sim/system.hh"
-
+#include "debug/SLICC_debug.hh"
 namespace gem5
 {
 
@@ -274,6 +274,7 @@ AbstractController::serviceMemoryQueue()
     unsigned int req_size = m_ruby_system->getBlockSizeBytes();
     if (mem_msg->m_Len > 0) {
         req_size = mem_msg->m_Len;
+        DPRINTF(SLICC_debug, "AbstractController.cc Request size BlockSizeBytes %d from Global PE %d\n", req_size, (*mem_msg).m_global_pe_id.num);
     }
 
     RequestPtr req
@@ -293,7 +294,7 @@ AbstractController::serviceMemoryQueue()
               MemoryRequestType_to_string(mem_msg->getType()),
               mem_msg->m_addr);
     }
-
+    pkt->global_pe_id = (mem_msg->m_global_pe_id.num);
     SenderState *s = new SenderState(mem_msg->m_Sender);
     pkt->pushSenderState(s);
 
@@ -391,7 +392,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         std::make_shared<MemoryMsg>(clockEdge(), blk_size, m_ruby_system);
     (*msg).m_addr = pkt->getAddr();
     (*msg).m_Sender = m_machineID;
-
+    (*msg).m_global_pe_id.num = pkt->global_pe_id;
     SenderState *s = dynamic_cast<SenderState *>(pkt->senderState);
     (*msg).m_OriginalRequestorMachId = s->id;
     delete s;

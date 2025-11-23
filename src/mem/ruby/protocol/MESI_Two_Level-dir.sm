@@ -319,7 +319,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.Len := 0;
         out_msg.global_pe_id := in_msg.global_pe_id;
-        DPRINTF(SLICC_debug, "Printing from MESI_Two_Leveldir %d\n", out_msg.global_pe_id);
+        //DPRINTF(SLICC_debug, "Printing from MESI_Two_Leveldir MEMORY_READ from %d\n", out_msg.global_pe_id);
       }
     }
   }
@@ -333,6 +333,8 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := 0;
+        out_msg.global_pe_id := in_msg.global_pe_id;
+        //DPRINTF(SLICC_debug, "Printing from MESI_Two_Leveldir MEMORY_WB from %d\n", out_msg.global_pe_id);
       }
     }
   }
