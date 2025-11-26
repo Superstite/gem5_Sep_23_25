@@ -495,6 +495,7 @@ class MemCtrl : public qos::MemCtrl
     std::deque<MemPacket*> respQueue;
 
     std::map<int, int> ReqPktPerGlobalID; // Creates a map of how many request packets are there in Queue per global_pe_id
+    Tick MFDFAintervalTicks = 100000;
 
     /**
      * Holds count of commands issued in burst window starting at

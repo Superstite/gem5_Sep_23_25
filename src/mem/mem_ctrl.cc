@@ -120,7 +120,7 @@ MemCtrl::startup()
         // start of simulation
         dram->nextBurstAt = curTick() + dram->commandOffset();
     }
-    schedule(MFDFAEvent, 47740000);
+    schedule(MFDFAEvent, curTick() + MFDFAintervalTicks);
 }
 
 Tick
@@ -1482,6 +1482,10 @@ MemCtrl::getAddrRanges()
 void MemCtrl::processMFDFAEvent()
 {
     DPRINTF(MESI_Two_Level_NoC, "Hello World! Proessing MFDFA Event.\n");
+    for (const auto& [key, value] : ReqPktPerGlobalID) {
+    DPRINTF(MESI_Two_Level_NoC, "Gloabl PE ID: %d, Req Packets: %d\n", key, value);
+}
+    schedule(MFDFAEvent, curTick() + MFDFAintervalTicks);
 }
 
 MemCtrl::MemoryPort::
