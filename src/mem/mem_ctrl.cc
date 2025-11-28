@@ -50,7 +50,11 @@
 #include "mem/mem_interface.hh"
 #include "mem/nvm_interface.hh"
 #include "sim/system.hh"
-#include "debug/MESI_Two_Level_NoC.hh" 
+#include "debug/MESI_Two_Level_NoC.hh"
+
+#include <pybind11/embed.h>
+#include <pybind11/stl.h>
+namespace py = pybind11; 
 namespace gem5
 {
 
@@ -412,8 +416,16 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
     DPRINTF(MemCtrl, "recvTimingReq: request %s addr %#x size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
-    // DPRINTF(MESI_Two_Level_NoC, "Printing from src/mem/mem_ctrl.cc pkt global_pe_id %d\n", pkt->global_pe_id);
     ReqPktPerGlobalID[pkt->global_pe_id] += 1;
+    Tick interArrival;
+    if (ReqPktPrevArrivalTime.find(pkt->global_pe_id) != ReqPktPrevArrivalTime.end()) {
+        interArrival = curTick() - ReqPktPrevArrivalTime[pkt->global_pe_id];
+        ReqPktInterArrivalTimes[pkt->global_pe_id].push_back(interArrival);
+        ReqPktPrevArrivalTime[pkt->global_pe_id] = curTick();
+    }
+    else {
+        ReqPktPrevArrivalTime[pkt->global_pe_id] = curTick();
+    }
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
@@ -1483,8 +1495,33 @@ void MemCtrl::processMFDFAEvent()
 {
     DPRINTF(MESI_Two_Level_NoC, "Hello World! Proessing MFDFA Event.\n");
     for (const auto& [key, value] : ReqPktPerGlobalID) {
-    DPRINTF(MESI_Two_Level_NoC, "Gloabl PE ID: %d, Req Packets: %d\n", key, value);
-}
+        DPRINTF(MESI_Two_Level_NoC, "Gloabl PE ID: %d, Total Req Packets in the time interval : %d\n", key, value);
+    }
+    static bool path_added = false;
+    if (!path_added) {
+        try {
+            py::module sys = py::module::import("sys");
+            sys.attr("path").attr("append")("/home/sneha/MFDFA_gem5");
+            path_added = true;
+        } catch (const std::exception &e) {
+            DPRINTF(MESI_Two_Level_NoC, "Failed to add path to sys.path\n");
+        }   
+    }
+    try {
+        py::module py_module = py::module::import("MFDFA_from_gem5");
+        py::function final_func = py_module.attr("final_function");
+        py::object result = final_func(ReqPktInterArrivalTimes);
+        }
+    catch (const std::exception &e) {
+        // DPRINTF(MESI_Two_Level_NoC, "Python error\n");
+        std::cerr << "Python error: " << e.what() << std::endl;
+    }
+
+    ReqPktPerGlobalID.clear();
+    for (const auto& [key, value] : ReqPktInterArrivalTimes) {
+        ReqPktInterArrivalTimes[key].clear();
+    }
+    ReqPktPrevArrivalTime.clear();
     schedule(MFDFAEvent, curTick() + MFDFAintervalTicks);
 }
 
