@@ -1494,35 +1494,35 @@ MemCtrl::getAddrRanges()
 void MemCtrl::processMFDFAEvent()
 {
     DPRINTF(MESI_Two_Level_NoC, "Hello World! Proessing MFDFA Event.\n");
-    for (const auto& [key, value] : ReqPktPerGlobalID) {
-        DPRINTF(MESI_Two_Level_NoC, "Gloabl PE ID: %d, Total Req Packets in the time interval : %d\n", key, value);
-    }
-    static bool path_added = false;
-    if (!path_added) {
-        try {
-            py::module sys = py::module::import("sys");
-            sys.attr("path").attr("append")("/home/sneha/MFDFA_gem5");
-            path_added = true;
-        } catch (const std::exception &e) {
-            DPRINTF(MESI_Two_Level_NoC, "Failed to add path to sys.path\n");
-        }   
-    }
-    try {
-        py::module py_module = py::module::import("MFDFA_from_gem5");
-        py::function final_func = py_module.attr("final_function");
-        py::object result = final_func(ReqPktInterArrivalTimes);
-        }
-    catch (const std::exception &e) {
-        // DPRINTF(MESI_Two_Level_NoC, "Python error\n");
-        std::cerr << "Python error: " << e.what() << std::endl;
-    }
+    // for (const auto& [key, value] : ReqPktPerGlobalID) {
+    //     DPRINTF(MESI_Two_Level_NoC, "Gloabl PE ID: %d, Total Req Packets in the time interval : %d\n", key, value);
+    // }
+    // static bool path_added = false;
+    // if (!path_added) {
+    //     try {
+    //         py::module sys = py::module::import("sys");
+    //         sys.attr("path").attr("append")("/home/sneha/MFDFA_gem5");
+    //         path_added = true;
+    //     } catch (const std::exception &e) {
+    //         DPRINTF(MESI_Two_Level_NoC, "Failed to add path to sys.path\n");
+    //     }   
+    // }
+    // try {
+    //     py::module py_module = py::module::import("MFDFA_from_gem5");
+    //     py::function final_func = py_module.attr("final_function");
+    //     py::object result = final_func(ReqPktInterArrivalTimes);
+    //     }
+    // catch (const std::exception &e) {
+    //     // DPRINTF(MESI_Two_Level_NoC, "Python error\n");
+    //     std::cerr << "Python error: " << e.what() << std::endl;
+    // }
 
-    ReqPktPerGlobalID.clear();
-    for (const auto& [key, value] : ReqPktInterArrivalTimes) {
-        ReqPktInterArrivalTimes[key].clear();
-    }
-    ReqPktPrevArrivalTime.clear();
-    schedule(MFDFAEvent, curTick() + MFDFAintervalTicks);
+    // ReqPktPerGlobalID.clear();
+    // for (const auto& [key, value] : ReqPktInterArrivalTimes) {
+    //     ReqPktInterArrivalTimes[key].clear();
+    // }
+    // ReqPktPrevArrivalTime.clear();
+    // schedule(MFDFAEvent, curTick() + MFDFAintervalTicks);
 }
 
 MemCtrl::MemoryPort::
