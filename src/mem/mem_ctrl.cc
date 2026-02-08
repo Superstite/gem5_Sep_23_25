@@ -1493,7 +1493,7 @@ MemCtrl::getAddrRanges()
 
 void MemCtrl::processMFDFAEvent()
 {
-    DPRINTF(MESI_Two_Level_NoC, "Hello World! Proessing MFDFA Event.\n");
+    DPRINTF(MESI_Two_Level_NoC, "Hello World! Processing MFDFA Event. Currently commented\n");
     // for (const auto& [key, value] : ReqPktPerGlobalID) {
     //     DPRINTF(MESI_Two_Level_NoC, "Gloabl PE ID: %d, Total Req Packets in the time interval : %d\n", key, value);
     // }
