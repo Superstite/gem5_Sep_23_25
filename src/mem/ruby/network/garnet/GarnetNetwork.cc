@@ -77,6 +77,8 @@ GarnetNetwork::GarnetNetwork(const Params &p)
         fault_model = p.fault_model;
 
     m_vnet_type.resize(m_virtual_networks);
+    m_num_rows = p.num_rows;
+    m_num_cols = p.num_cols;
 
     for (int i = 0 ; i < m_virtual_networks ; i++) {
         if (m_vnet_type_names[i] == "response")

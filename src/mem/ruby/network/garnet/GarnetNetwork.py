@@ -52,6 +52,8 @@ class GarnetNetwork(RubyNetwork):
     garnet_deadlock_threshold = Param.UInt32(
         50000, "network-level deadlock threshold"
     )
+    num_rows = Param.Int(4, "Number of rows")
+    num_cols = Param.Int(4, "Number of columns")
 
 
 class GarnetNetworkInterface(ClockedObject):

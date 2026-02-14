@@ -42,6 +42,7 @@ from .caches.mesi_two_level.dma_controller import DMAController
 from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
 
 from .topologies.garnet_mesh import GarnetMesh
+from .topologies.custom_mesh import CustomMesh
 # from .topologies.garnet_mesh_Sneha_Rivu import GarnetMesh      #Not working, dont know why
 class MESITwoLevelCacheNetwork(
     AbstractRubyCacheHierarchy, AbstractTwoLevelCacheHierarchy
@@ -90,9 +91,13 @@ class MESITwoLevelCacheNetwork(
         self.ruby_system.number_of_virtual_networks = 5
 
         #self.ruby_system.network = SimplePt2Pt(self.ruby_system)
-        self.ruby_system.network = GarnetMesh(self.ruby_system)
+        self.ruby_system.network = CustomMesh(self.ruby_system)
+        # Configure custom Routing algorithm
+        self.ruby_system.network.routing_algorithm = 2
+        print("Routing_Algorith=", self.ruby_system.network.routing_algorithm)
         self.ruby_system.network.number_of_virtual_networks = 5
-
+        self.ruby_system.network.num_rows = 8
+        self.ruby_system.network.num_cols = 8
 
         self._l1_controllers = []
         for i, core in enumerate(board.get_processor().get_cores()):
@@ -185,11 +190,13 @@ class MESITwoLevelCacheNetwork(
         print("Number of directory controllers = ", len(self._directory_controllers))
         print("Number of dma controllers = ", len(self._dma_controllers))
 
+        first_dir_loc = 21
+        second_dir_loc = 42
         self.ruby_system.network.connectControllers(
             self._l1_controllers,
             self._l2_controllers,
             self._directory_controllers,
-            self._dma_controllers, len(self._l1_controllers)
+            self._dma_controllers, len(self._l1_controllers), first_dir_loc, second_dir_loc
         )
 
         # Set up a proxy port for the system_port. Used for load binaries and

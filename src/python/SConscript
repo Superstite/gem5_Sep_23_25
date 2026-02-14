@@ -202,7 +202,8 @@ PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/garnet_pt2pt.py')
 PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/garnet_mesh.py')
-
+PySource('gem5.components.cachehierarchies.ruby.topologies',
+    'gem5/components/cachehierarchies/ruby/topologies/custom_mesh.py')
 
 PySource('gem5.components.devices',
     'gem5/components/devices/__init__.py')
