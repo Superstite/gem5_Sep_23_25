@@ -38,13 +38,6 @@ parser.add_argument(
     "generator_cores", type=int, help="The number of generator cores to use."
 )
 
-parser.add_argument(
-    "network_class",
-    type=str,
-    help="The network class to import and instantiate.",
-    choices=["GarnetPt2Pt", "SimplePt2Pt", "GarnetMesh"],
-)
-
 args = parser.parse_args()
 
 cache_hierarchy = MESITwoLevelCacheNetwork(
