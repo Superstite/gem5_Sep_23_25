@@ -119,6 +119,10 @@ PySource('gem5.components.cachehierarchies.ruby',
     'mesi_three_level_cache_hierarchy.py')
 PySource('gem5.components.cachehierarchies.ruby',
     'gem5/components/cachehierarchies/ruby/mi_example_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.ruby',
+    'gem5/components/cachehierarchies/ruby/mi_example_cache_network.py')
+PySource('gem5.components.cachehierarchies.ruby',
+    'gem5/components/cachehierarchies/ruby/mesi_two_level_cache_network.py')
 PySource('gem5.components.cachehierarchies.ruby.caches',
     'gem5/components/cachehierarchies/ruby/caches/__init__.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
@@ -194,6 +198,11 @@ PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/__init__.py')
 PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/simple_pt2pt.py')
+PySource('gem5.components.cachehierarchies.ruby.topologies',
+    'gem5/components/cachehierarchies/ruby/topologies/garnet_pt2pt.py')
+PySource('gem5.components.cachehierarchies.ruby.topologies',
+    'gem5/components/cachehierarchies/ruby/topologies/garnet_mesh.py')
+
 
 PySource('gem5.components.devices',
     'gem5/components/devices/__init__.py')
