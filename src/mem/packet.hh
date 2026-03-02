@@ -72,7 +72,10 @@ typedef Packet *PacketPtr;
 typedef uint8_t* PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;
 typedef uint64_t PacketId;
-
+enum class Criticality
+{
+    HI, LO
+};
 class MemCmd
 {
     friend class Packet;
@@ -418,6 +421,8 @@ class Packet : public Printable, public Extensible<Packet>
      * This is used for correctness/debugging only.
      */
     uint64_t htmTransactionUid;
+
+    Criticality crit;
 
   public:
 
@@ -768,6 +773,9 @@ class Packet : public Printable, public Extensible<Packet>
      */
     inline uint8_t qosValue() const { return _qosValue; }
 
+    // Getter function for Packet criticality
+    inline Criticality getCriticality() const { return crit; }
+
     /**
      * QoS Value setter
      * Interface for setting QoS priority value of the packet.
@@ -776,6 +784,10 @@ class Packet : public Printable, public Extensible<Packet>
      */
     inline void qosValue(const uint8_t qos_value)
     { _qosValue = qos_value; }
+
+    // Setter function for criticality of a packet
+    inline void setCriticality(const Criticality c)
+    { crit = c; }
 
     inline RequestorID requestorId() const { return req->requestorId(); }
 
@@ -880,6 +892,7 @@ class Packet : public Printable, public Extensible<Packet>
            _qosValue(0),
            htmReturnReason(HtmCacheFailure::NO_FAIL),
            htmTransactionUid(0),
+           crit(Criticality::LO),
            headerDelay(0), snoopDelay(0),
            payloadDelay(0), senderState(NULL)
     {
@@ -921,6 +934,7 @@ class Packet : public Printable, public Extensible<Packet>
            _qosValue(0),
            htmReturnReason(HtmCacheFailure::NO_FAIL),
            htmTransactionUid(0),
+           crit(Criticality::LO),
            headerDelay(0),
            snoopDelay(0), payloadDelay(0), senderState(NULL)
     {
@@ -950,6 +964,7 @@ class Packet : public Printable, public Extensible<Packet>
            _qosValue(pkt->qosValue()),
            htmReturnReason(HtmCacheFailure::NO_FAIL),
            htmTransactionUid(0),
+           crit(pkt->getCriticality()),
            headerDelay(pkt->headerDelay),
            snoopDelay(0),
            payloadDelay(pkt->payloadDelay),
