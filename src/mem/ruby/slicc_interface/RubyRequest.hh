@@ -52,6 +52,7 @@
 #include "mem/ruby/protocol/PrefetchBit.hh"
 #include "mem/ruby/protocol/RubyAccessMode.hh"
 #include "mem/ruby/protocol/RubyRequestType.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 
 namespace gem5
 {
@@ -109,7 +110,7 @@ class RubyRequest : public Message
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt ? m_pkt->req->isSecure() : false),
-          m_crit(m_pkt ? static_cast<Criticality>(m_pkt->getCriticality()) \
+          m_crit(m_pkt ? toRubyCriticality(m_pkt->getCriticality()) \
           : Criticality_LO)
     {
         int block_size_bits = floorLog2(block_size);
@@ -143,7 +144,7 @@ class RubyRequest : public Message
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt->req->isSecure()),
-          m_crit(m_pkt ? static_cast<Criticality>(m_pkt->getCriticality()) \
+          m_crit(m_pkt ? toRubyCriticality(m_pkt->getCriticality()) \
           : Criticality_LO)
     {
         assert(m_pkt->req->isMemMgmt());
@@ -181,7 +182,7 @@ class RubyRequest : public Message
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt->req->isSecure()),
-          m_crit(m_pkt ? static_cast<Criticality>(m_pkt->getCriticality()) \
+          m_crit(m_pkt ? toRubyCriticality(m_pkt->getCriticality()) \
           : Criticality_LO)
     {
         int block_size_bits = floorLog2(block_size);
@@ -221,7 +222,7 @@ class RubyRequest : public Message
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt->req->isSecure()),
-          m_crit(m_pkt ? static_cast<Criticality>(m_pkt->getCriticality()) \
+          m_crit(m_pkt ? toRubyCriticality(m_pkt->getCriticality()) \
           : Criticality_LO)
     {
         int block_size_bits = floorLog2(block_size);

@@ -48,6 +48,7 @@
 #include "mem/packet.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/common/WriteMask.hh"
+#include "mem/ruby/protocol/Criticality.hh"
 #include "mem/ruby/protocol/MessageSizeType.hh"
 
 namespace gem5
@@ -66,7 +67,9 @@ class Message
         : m_block_size(block_size),
           m_time(curTime),
           m_LastEnqueueTime(curTime),
-          m_DelayedTicks(0), m_msg_counter(0)
+          m_DelayedTicks(0), m_msg_counter(0),
+          incoming_link(0), vnet(0),
+          m_crit(Criticality_LO)
     { }
 
     Message(const Message &other) = default;
@@ -121,8 +124,8 @@ class Message
     void setIncomingLink(int link) { incoming_link = link; }
     int getVnet() const { return vnet; }
     void setVnet(int net) { vnet = net; }
-    void setCriticality(Criticality c) { crit = c; }
-    Criticality getCriticality() const { return crit; }
+    void setCriticality(Criticality c) { m_crit = c; }
+    Criticality getCriticality() const { return m_crit; }
 
   protected:
     int m_block_size = 0;
@@ -137,7 +140,7 @@ class Message
     int incoming_link;
     int vnet;
     // Criticality of the message
-    Criticality crit;
+    Criticality m_crit;
 };
 
 inline bool
