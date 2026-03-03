@@ -260,6 +260,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Sender);
         out_msg.MessageSize := MessageSizeType:Response_Control;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -274,6 +275,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.crit := in_msg.crit;
 
         Entry e := getDirectoryEntry(in_msg.addr);
         e.Owner := in_msg.OriginalRequestorMachId;
@@ -290,6 +292,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
         out_msg.MessageSize := MessageSizeType:Response_Control;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -318,6 +321,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Sender := in_msg.Requestor;
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.Len := 0;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -331,6 +335,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := 0;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -344,6 +349,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Sender := in_msg.Requestor;
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.Len := 0;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -361,6 +367,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
         out_msg.Destination.add(tbe.Requestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -375,6 +382,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := in_msg.Len;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -405,6 +413,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(getDirectoryEntry(address).Owner);
         out_msg.MessageSize := MessageSizeType:Response_Control;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -419,6 +428,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
         out_msg.Destination.add(tbe.Requestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
@@ -444,6 +454,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
         out_msg.DataBlk := tbe.DataBlk;
         out_msg.Len := tbe.Len;
+        out_msg.crit := in_msg.crit;
       }
     }
   }
