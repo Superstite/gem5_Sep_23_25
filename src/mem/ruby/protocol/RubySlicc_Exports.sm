@@ -405,3 +405,8 @@ enumeration(LinkDirection, desc="...") {
   In, desc="Inward link direction";
   Out, desc="Outward link direction";
 }
+
+enumeration(Criticality, desc="...") {
+    LO, desc="Low Criticality of the message";
+    HI, desc="High Criticality of the message";
+}

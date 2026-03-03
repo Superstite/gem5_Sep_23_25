@@ -47,6 +47,7 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/WriteMask.hh"
+#include "mem/ruby/protocol/Criticality.hh"
 #include "mem/ruby/protocol/Message.hh"
 #include "mem/ruby/protocol/PrefetchBit.hh"
 #include "mem/ruby/protocol/RubyAccessMode.hh"
@@ -85,6 +86,7 @@ class RubyRequest : public Message
     bool m_isGLCSet;
     bool m_isSLCSet;
     bool m_isSecure;
+    Criticality m_crit;
 
     RubyRequest(Tick curTime, int block_size, RubySystem *rs,
         uint64_t _paddr, int _len,
@@ -106,7 +108,9 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt ? m_pkt->req->isSecure() : false)
+          m_isSecure(m_pkt ? m_pkt->req->isSecure() : false),
+          m_crit(m_pkt ? static_cast<Criticality>(m_pkt->getCriticality()) \
+          : Criticality_LO)
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
@@ -138,7 +142,9 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt->req->isSecure())
+          m_isSecure(m_pkt->req->isSecure()),
+          m_crit(m_pkt ? static_cast<Criticality>(m_pkt->getCriticality()) \
+          : Criticality_LO)
     {
         assert(m_pkt->req->isMemMgmt());
         if (_pkt) {
@@ -174,7 +180,9 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt->req->isSecure())
+          m_isSecure(m_pkt->req->isSecure()),
+          m_crit(m_pkt ? static_cast<Criticality>(m_pkt->getCriticality()) \
+          : Criticality_LO)
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
@@ -212,7 +220,9 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt->req->isSecure())
+          m_isSecure(m_pkt->req->isSecure()),
+          m_crit(m_pkt ? static_cast<Criticality>(m_pkt->getCriticality()) \
+          : Criticality_LO)
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
