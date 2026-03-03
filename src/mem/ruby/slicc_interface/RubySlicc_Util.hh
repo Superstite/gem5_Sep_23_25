@@ -57,6 +57,7 @@
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/common/WriteMask.hh"
+#include "mem/ruby/protocol/Criticality.hh"
 #include "mem/ruby/protocol/RubyRequestType.hh"
 
 namespace gem5
@@ -324,6 +325,17 @@ inline RequestorID
 getRequestorID(RequestPtr req)
 {
     return req->requestorId();
+}
+
+inline Criticality
+toRubyCriticality(gem5::Criticality c)
+{
+    switch (c) {
+      case gem5::Criticality::HI: return Criticality_HI;
+      case gem5::Criticality::LO: return Criticality_LO;
+    }
+    // keep compiler happy
+    return Criticality_LO;
 }
 
 } // namespace ruby
