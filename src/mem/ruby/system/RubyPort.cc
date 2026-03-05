@@ -290,6 +290,7 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
     // route the response
     pkt->pushSenderState(new SenderState(this));
 
+    pkt->setSrcID(owner.m_controller->getMachineID().getNum());
     // Submit the ruby request
     RequestStatus requestStatus = owner.makeRequest(pkt);
 

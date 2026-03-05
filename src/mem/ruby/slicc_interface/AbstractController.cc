@@ -294,6 +294,7 @@ AbstractController::serviceMemoryQueue()
               mem_msg->m_addr);
     }
 
+    pkt->setSrcID(mem_msg->m_src_id);
     SenderState *s = new SenderState(mem_msg->m_Sender);
     pkt->pushSenderState(s);
 
@@ -391,7 +392,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         std::make_shared<MemoryMsg>(clockEdge(), blk_size, m_ruby_system);
     (*msg).m_addr = pkt->getAddr();
     (*msg).m_Sender = m_machineID;
-
+    (*msg).m_src_id = pkt->getSrcId();
     SenderState *s = dynamic_cast<SenderState *>(pkt->senderState);
     (*msg).m_OriginalRequestorMachId = s->id;
     delete s;

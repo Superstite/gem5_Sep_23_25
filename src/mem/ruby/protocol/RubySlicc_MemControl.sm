@@ -77,6 +77,7 @@ structure(MemoryMsg, desc="...", interface="Message") {
   bool isGLCSet,                desc="Bypass L1 Cache";
   bool isSLCSet,                desc="Bypass L1 and L2 Caches";
   Criticality crit,             desc="HI/LO Criticality of the message";
+  int src_id,                   desc="Src core/Node ID";
 
   bool functionalRead(Packet *pkt) {
     if ((MessageSize == MessageSizeType:Response_Data) ||

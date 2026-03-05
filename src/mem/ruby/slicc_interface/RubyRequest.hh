@@ -88,6 +88,7 @@ class RubyRequest : public Message
     bool m_isSLCSet;
     bool m_isSecure;
     Criticality m_crit;
+    int m_src_id;
 
     RubyRequest(Tick curTime, int block_size, RubySystem *rs,
         uint64_t _paddr, int _len,
@@ -111,7 +112,8 @@ class RubyRequest : public Message
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt ? m_pkt->req->isSecure() : false),
           m_crit(m_pkt ? toRubyCriticality(m_pkt->getCriticality()) \
-          : Criticality_LO)
+          : Criticality_LO),
+          m_src_id(_pkt ? m_pkt->getSrcId() : -1)
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
@@ -145,7 +147,8 @@ class RubyRequest : public Message
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt->req->isSecure()),
           m_crit(m_pkt ? toRubyCriticality(m_pkt->getCriticality()) \
-          : Criticality_LO)
+          : Criticality_LO),
+          m_src_id(_pkt ? m_pkt->getSrcId() : -1)
     {
         assert(m_pkt->req->isMemMgmt());
         if (_pkt) {
@@ -183,7 +186,8 @@ class RubyRequest : public Message
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt->req->isSecure()),
           m_crit(m_pkt ? toRubyCriticality(m_pkt->getCriticality()) \
-          : Criticality_LO)
+          : Criticality_LO),
+          m_src_id(_pkt ? m_pkt->getSrcId() : -1)
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
@@ -223,7 +227,8 @@ class RubyRequest : public Message
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt->req->isSecure()),
           m_crit(m_pkt ? toRubyCriticality(m_pkt->getCriticality()) \
-          : Criticality_LO)
+          : Criticality_LO),
+          m_src_id(_pkt ? m_pkt->getSrcId() : -1)
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);

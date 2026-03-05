@@ -422,6 +422,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.AccessMode := in_msg.AccessMode;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
@@ -436,6 +437,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Destination.add(cache_entry.Exclusive);
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
@@ -492,6 +494,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
           out_msg.AckCount := out_msg.AckCount + 1;
         }
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
@@ -512,6 +515,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
           out_msg.AckCount := out_msg.AckCount + 1;
         }
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
@@ -528,6 +532,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.AckCount := 0;
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
@@ -597,6 +602,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Destination := cache_entry.Sharers;
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
@@ -612,6 +618,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Destination.remove(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
@@ -724,6 +731,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Response_Control;
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
@@ -740,6 +748,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         // upgrader doesn't get ack from itself, hence the + 1
         out_msg.AckCount := 0 - cache_entry.Sharers.count() + 1;
         out_msg.crit := in_msg.crit;
+        out_msg.src_id := in_msg.src_id;
       }
     }
   }
