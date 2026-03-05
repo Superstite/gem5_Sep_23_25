@@ -424,6 +424,9 @@ class Packet : public Printable, public Extensible<Packet>
 
     Criticality crit;
 
+    // Src core/node ID
+    int src_id;
+
   public:
 
     /**
@@ -776,6 +779,9 @@ class Packet : public Printable, public Extensible<Packet>
     // Getter function for Packet criticality
     inline Criticality getCriticality() const { return crit; }
 
+    // Getter function for Packet Rew Src CPU/Node ID
+    inline int getSrcId() const { return src_id; }
+
     /**
      * QoS Value setter
      * Interface for setting QoS priority value of the packet.
@@ -788,6 +794,10 @@ class Packet : public Printable, public Extensible<Packet>
     // Setter function for criticality of a packet
     inline void setCriticality(const Criticality c)
     { crit = c; }
+
+    // Setter function for source CPU/Node ID of a packet
+    inline void setSrcID(const int id)
+    { src_id = id; }
 
     inline RequestorID requestorId() const { return req->requestorId(); }
 
@@ -894,7 +904,7 @@ class Packet : public Printable, public Extensible<Packet>
            htmTransactionUid(0),
            crit(Criticality::LO),
            headerDelay(0), snoopDelay(0),
-           payloadDelay(0), senderState(NULL)
+           payloadDelay(0), senderState(NULL), src_id(-1)
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -936,7 +946,7 @@ class Packet : public Printable, public Extensible<Packet>
            htmTransactionUid(0),
            crit(Criticality::LO),
            headerDelay(0),
-           snoopDelay(0), payloadDelay(0), senderState(NULL)
+           snoopDelay(0), payloadDelay(0), senderState(NULL), src_id(-1)
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -968,7 +978,7 @@ class Packet : public Printable, public Extensible<Packet>
            headerDelay(pkt->headerDelay),
            snoopDelay(0),
            payloadDelay(pkt->payloadDelay),
-           senderState(pkt->senderState)
+           senderState(pkt->senderState), src_id(pkt->src_id)
     {
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);

@@ -69,7 +69,8 @@ class Message
           m_LastEnqueueTime(curTime),
           m_DelayedTicks(0), m_msg_counter(0),
           incoming_link(0), vnet(0),
-          m_crit(Criticality_LO)
+          m_crit(Criticality_LO),
+          m_src_id(-1)
     { }
 
     Message(const Message &other) = default;
@@ -126,6 +127,8 @@ class Message
     void setVnet(int net) { vnet = net; }
     void setCriticality(Criticality c) { m_crit = c; }
     Criticality getCriticality() const { return m_crit; }
+    int getSrcID() const { return m_src_id; }
+    void setSrcID(int id) { m_src_id = id; }
 
   protected:
     int m_block_size = 0;
@@ -141,6 +144,7 @@ class Message
     int vnet;
     // Criticality of the message
     Criticality m_crit;
+    int m_src_id;
 };
 
 inline bool
