@@ -333,9 +333,19 @@ toRubyCriticality(gem5::Criticality c)
     switch (c) {
       case gem5::Criticality::HI: return Criticality_HI;
       case gem5::Criticality::LO: return Criticality_LO;
+      default: return Criticality_LO;
     }
-    // keep compiler happy
-    return Criticality_LO;
+
+}
+
+inline gem5::Criticality
+togem5Criticality(gem5::ruby::Criticality c)
+{
+    switch (c) {
+      case gem5::ruby::Criticality_HI: return gem5::Criticality::HI;
+      case gem5::ruby::Criticality_LO: return gem5::Criticality::LO;
+      default: return gem5::Criticality::LO;
+    }
 }
 
 } // namespace ruby
