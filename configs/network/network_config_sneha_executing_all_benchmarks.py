@@ -83,53 +83,184 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-binary = CustomResource(
-    "/home/sneha/Github_Repos/gem5_Sep_23_25/tests/test-progs/hello/bin/x86/linux/hello"
+# binary = CustomResource(
+#     "/home/sneha/Github_Repos/gem5_Sep_23_25/tests/test-progs/hello/bin/x86/linux/hello"
+# )
+# board.set_se_binary_workload(binary=binary)
+
+binary1 = CustomResource(
+    "/home/sneha/Github_Repos/mibench/automotive/susan/susan"
 )
-board.set_se_binary_workload(binary=binary)
+arguments1 = [
+    "/home/sneha/Github_Repos/mibench/automotive/susan/susan/input_large.pgm",
+    "/home/sneha/Github_Repos/mibench/automotive/susan/output_large.smoothing.pgm",
+    "-s",
+]
 
-# binary1 = CustomResource('/home/sneha/Github_Repos/mibench/automotive/susan/susan')
-# arguments1 = ['/home/sneha/Github_Repos/mibench/automotive/susan/susan/input_large.pgm', \
-#               '/home/sneha/Github_Repos/mibench/automotive/susan/output_large.smoothing.pgm', '-s']
+binary2 = CustomResource(
+    "/home/sneha/Github_Repos/mibench/automotive/qsort/qsort_large"
+)
+arguments2 = [
+    "/home/sneha/Github_Repos/mibench/automotive/qsort/input_large.dat"
+]
 
-# binary2 = CustomResource('/home/sneha/Github_Repos/mibench/automotive/qsort/qsort_large')
-# arguments2 = ['/home/sneha/Github_Repos/mibench/automotive/qsort/input_large.dat']
+binary3 = CustomResource(
+    "/home/sneha/Github_Repos/mibench/automotive/bitcount/bitcnts"
+)
+arguments3 = ["bitcnts", "1125000"]
 
-# binary3 = CustomResource('/home/sneha/Github_Repos/mibench/automotive/bitcount/bitcnts')
-# arguments3 = ['bitcnts', '1125000']
+binary4 = CustomResource(
+    "/home/sneha/Github_Repos/mibench/automotive/basicmath/basicmath_small"
+)
+arguments4 = [""]
 
-# binary4 = CustomResource('/home/sneha/Github_Repos/mibench/automotive/basicmath/basicmath_small')
-# arguments4 = ['']
+binary5 = CustomResource("/home/sneha/Github_Repos/mibench/telecomm/CRC32/crc")
+arguments5 = ["/home/sneha/Github_Repos/mibench/telecomm/adpcm/data/large.pcm"]
 
-# binary5 = CustomResource('/home/sneha/Github_Repos/mibench/telecomm/CRC32/crc')
-# arguments5 = ['/home/sneha/Github_Repos/mibench/telecomm/adpcm/data/large.pcm']
+binary6 = CustomResource(
+    "/home/sneha/Github_Repos/mibench/network/dijkstra/dijkstra_large"
+)
+arguments6 = ["/home/sneha/Github_Repos/mibench/network/dijkstra/input.dat"]
 
-# binary6 = CustomResource('/home/sneha/Github_Repos/mibench/network/dijkstra/dijkstra_large')
-# arguments6 = ['/home/sneha/Github_Repos/mibench/network/dijkstra/input.dat']
+binary7 = CustomResource(
+    "/home/sneha/Github_Repos/mibench/network/patricia/patricia"
+)
+arguments7 = ["/home/sneha/Github_Repos/mibench/network/patricia/large.udp"]
 
-# binary7 = CustomResource('/home/sneha/Github_Repos/mibench/network/patricia/patricia')
-# arguments7 = ['/home/sneha/Github_Repos/mibench/network/patricia/large.udp']
-
-# board.set_se_multi_binary_workload(binaries=[binary1, binary2, binary3, binary4, binary5, binary6, binary7, \
-#                                             binary1, binary2, binary3, binary4, binary5, binary6, binary7, \
-#                                             binary1, binary2, binary3, binary4, binary5, binary6, binary7,\
-#                                             binary1, binary2, binary3, binary4, binary5, binary6, binary7, \
-#                                             binary1, binary2, binary3, binary4, binary5, binary6, binary7, \
-#                                             binary1, binary2, binary3, binary4, binary5, binary6, binary7, \
-#                                             binary1, binary2, binary3, binary4, binary5, binary6, binary7, \
-#                                             binary1, binary2, binary3, binary4, binary5, binary6, binary7, \
-#                                             binary1, binary2, binary3, binary4, binary5, binary6, binary7, \
-#                                             binary1],
-#                                    arguments=[arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1, arguments2, arguments3, arguments4, arguments5, arguments6, arguments7, \
-#                                               arguments1])
+board.set_se_multi_binary_workload(
+    binaries=[
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+        binary2,
+        binary3,
+        binary4,
+        binary5,
+        binary6,
+        binary7,
+        binary1,
+    ],
+    arguments=[
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+        arguments2,
+        arguments3,
+        arguments4,
+        arguments5,
+        arguments6,
+        arguments7,
+        arguments1,
+    ],
+)
 
 # Lastly we run the simulation.
 simulator = Simulator(board=board)
