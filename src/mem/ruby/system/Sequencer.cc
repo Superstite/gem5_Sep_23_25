@@ -1122,7 +1122,6 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
             }
             DPRINTF(RubySequencer, "Issuing TLBI %016x\n",
                     msg->m_tlbiTransactionUid);
-            msg->m_crit = toRubyCriticality(pkt->getCriticality());
         }
     } else {
         msg = std::make_shared<RubyRequest>(clockEdge(), blk_size,
@@ -1149,7 +1148,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
                 printAddress(msg->getPhysicalAddress()),
                 RubyRequestType_to_string(secondary_type));
     }
-
+    msg->m_crit = toRubyCriticality(pkt->getCriticality());
     // hardware transactional memory
     // If the request originates in a transaction,
     // then mark the Ruby message as such.
