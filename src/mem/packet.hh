@@ -1570,18 +1570,6 @@ class Packet : public Printable, public Extensible<Packet>
      * failed transaction, this function returns the failure reason.
      */
     HtmCacheFailure getHtmTransactionFailedInCacheRC() const;
-
-    inline std::string CriticalitytoString(Criticality c) const {
-        switch (c) {
-          case Criticality::LO:
-            return "LO";
-          case Criticality::HI:
-            return "HI";
-          default:
-            return "Unknown criticality";
-        }
-    };
-
 };
 
 } // namespace gem5

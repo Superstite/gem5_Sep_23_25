@@ -539,6 +539,17 @@ MemCtrl::qosSchedule(std::initializer_list<Queues*> queues,
 }
 
 } // namespace qos
+static inline std::string CriticalitytoString(Criticality c) {
+    switch (c) {
+        case Criticality::LO:
+        return "LO";
+        case Criticality::HI:
+        return "HI";
+        default:
+        return "Unknown criticality";
+    }
+};
+
 } // namespace memory
 } // namespace gem5
 

@@ -43,6 +43,7 @@
 #include "base/trace.hh"
 #include "debug/DRAM.hh"
 #include "debug/Drain.hh"
+#include "debug/InfluentialNodes.hh"
 #include "debug/MemCtrl.hh"
 #include "debug/NVM.hh"
 #include "debug/QOS.hh"
@@ -407,6 +408,10 @@ bool
 MemCtrl::recvTimingReq(PacketPtr pkt)
 {
     // This is where we enter from the outside world
+    DPRINTF(InfluentialNodes, "MemCtrl::recvTimingReq: request %s addr %#x \
+        size %d Criticality %s\n", pkt->cmdString(), pkt->getAddr(), \
+        pkt->getSize(), CriticalitytoString(pkt->getCriticality()));
+
     DPRINTF(MemCtrl, "recvTimingReq: request %s addr %#x size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 

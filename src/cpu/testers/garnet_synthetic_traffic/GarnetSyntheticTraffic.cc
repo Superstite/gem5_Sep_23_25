@@ -318,7 +318,11 @@ GarnetSyntheticTraffic::generatePkt()
     PacketPtr pkt = new Packet(req, requestType);
     pkt->dataDynamic(new uint8_t[req->getSize()]);
     pkt->senderState = NULL;
-
+    if (injReqType == 0) {
+        pkt->setCriticality(gem5::Criticality::HI);
+    } else {
+        pkt->setCriticality(gem5::Criticality::LO);
+    }
     sendPkt(pkt);
 }
 
