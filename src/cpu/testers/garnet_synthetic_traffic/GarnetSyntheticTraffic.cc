@@ -37,6 +37,7 @@
 #include "base/logging.hh"
 #include "base/statistics.hh"
 #include "debug/GarnetSyntheticTraffic.hh"
+#include "debug/InfluentialNodes.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
@@ -48,6 +49,17 @@ namespace gem5
 {
 
 int TESTER_NETWORK=0;
+
+void
+GarnetSyntheticTraffic::startup()
+{
+    // Always call parent if exists (safe practice)
+    ClockedObject::startup();
+
+    schedule(new ChangeRateEvent(this, 0.05), 50000);
+    schedule(new ChangeRateEvent(this, 0.1), 100000);
+}
+
 
 bool
 GarnetSyntheticTraffic::CpuPort::recvTimingResp(PacketPtr pkt)
@@ -105,6 +117,7 @@ GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params &p)
     id = TESTER_NETWORK++;
     DPRINTF(GarnetSyntheticTraffic,"Config Created: Name = %s , and id = %d\n",
             name(), id);
+    injection_rate = p.inj_rate;
 }
 
 Port &
@@ -140,6 +153,11 @@ GarnetSyntheticTraffic::completeRequest(PacketPtr pkt)
 void
 GarnetSyntheticTraffic::tick()
 {
+
+    DPRINTF(InfluentialNodes,
+            "Tick %lu injection_rate = %f\n",
+            curTick(), injection_rate);
+
     if (++noResponseCycles >= responseLimit) {
         fatal("%s deadlocked at cycle %d\n", name(), curTick());
     }
@@ -151,7 +169,8 @@ GarnetSyntheticTraffic::tick()
     bool sendAllowedThisCycle;
     double injRange = pow((double) 10, (double) precision);
     unsigned trySending = rng->random<unsigned>(0, (int) injRange);
-    if (trySending < injRate*injRange)
+    // if (trySending < injRate*injRange)
+    if (trySending < injection_rate*injRange)
         sendAllowedThisCycle = true;
     else
         sendAllowedThisCycle = false;
@@ -354,6 +373,15 @@ void
 GarnetSyntheticTraffic::printAddr(Addr a)
 {
     cachePort.printAddr(a);
+}
+
+void
+GarnetSyntheticTraffic::setInjectionRate(double rate)
+{
+    injection_rate = rate;
+    DPRINTF(GarnetSyntheticTraffic, "Injection rate changed to \
+        %f at tick %lu\n",
+            rate, curTick());
 }
 
 } // namespace gem5

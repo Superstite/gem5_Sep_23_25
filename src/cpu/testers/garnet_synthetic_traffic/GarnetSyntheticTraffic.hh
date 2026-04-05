@@ -75,6 +75,10 @@ class GarnetSyntheticTraffic : public ClockedObject
      */
     void printAddr(Addr a);
 
+    void setInjectionRate(double rate);
+
+    void startup() override;
+
   protected:
     EventFunctionWrapper tickEvent;
 
@@ -147,6 +151,26 @@ class GarnetSyntheticTraffic : public ClockedObject
     void doRetry();
 
     friend class MemCompleteEvent;
+    double injection_rate;
+};
+
+class ChangeRateEvent : public Event
+{
+  private:
+    GarnetSyntheticTraffic *gen;
+    double new_rate;
+
+  public:
+    ChangeRateEvent(GarnetSyntheticTraffic *g, double rate)
+        : gen(g), new_rate(rate) {}
+
+    void process() override {
+        gen->setInjectionRate(new_rate);
+    }
+
+    const char *description() const override {
+        return "Change Injection Rate Event";
+    }
 };
 
 } // namespace gem5
