@@ -242,8 +242,11 @@ GarnetSyntheticTraffic::generatePkt()
 
     // The source of the packets is a cache.
     // The destination of the packets is a directory.
-    // The destination bits are embedded in the address after byte-offset.
-    Addr paddr =  destination;
+    // Generate random addresses within the memory space to avoid caching
+    // and generate sustained traffic at the memory controller.
+    // Addresses are aligned to block size boundaries.
+    Addr num_blocks = size >> blockSizeBits;
+    Addr paddr = rng->random<Addr>(0, num_blocks - 1);
     paddr <<= blockSizeBits;
     unsigned access_size = 1; // Does not affect Ruby simulation
 

@@ -216,6 +216,8 @@ def create_topology(controllers, options):
     topology_class = getattr(
         import_module(f"topologies.{options.topology}"), options.topology
     )
+    print("Creating topology: ", options.topology)
+    print("Number of controllers: ", len(controllers))
     topology = topology_class(controllers=controllers)
     return topology
 
