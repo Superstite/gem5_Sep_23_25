@@ -177,57 +177,43 @@ class FindInfluentialNodes(SimpleTopology):
         print("NUMA nodes: ", self.numa_nodes)
         print("Number of NUMA nodes: ", self.num_numa_nodes)
 
-        # Connect dir_ctrl to every node
-        for i, n in enumerate(dir_nodes):
-            cntrl_level, router_id = divmod(i, num_routers)
-            # assert cntrl_level < caches_per_router
-            ext_links.append(
-                ExtLink(
-                    link_id=link_count,
-                    ext_node=n,
-                    int_node=routers[router_id],
-                    latency=link_latency,
-                )
+        # Connect the dir nodes to the corners.
+        ext_links.append(
+            ExtLink(
+                link_id=link_count,
+                ext_node=dir_nodes[0],
+                int_node=routers[0],
+                latency=link_latency,
             )
-            link_count += 1
-
-        # # Connect the dir nodes to the corners.
-        # ext_links.append(
-        #     ExtLink(
-        #         link_id=link_count,
-        #         ext_node=dir_nodes[0],
-        #         int_node=routers[0],
-        #         latency=link_latency,
-        #     )
-        # )
-        # link_count += 1
-        # ext_links.append(
-        #     ExtLink(
-        #         link_id=link_count,
-        #         ext_node=dir_nodes[1],
-        #         int_node=routers[num_columns - 1],
-        #         latency=link_latency,
-        #     )
-        # )
-        # link_count += 1
-        # ext_links.append(
-        #     ExtLink(
-        #         link_id=link_count,
-        #         ext_node=dir_nodes[2],
-        #         int_node=routers[num_routers - num_columns],
-        #         latency=link_latency,
-        #     )
-        # )
-        # link_count += 1
-        # ext_links.append(
-        #     ExtLink(
-        #         link_id=link_count,
-        #         ext_node=dir_nodes[3],
-        #         int_node=routers[num_routers - 1],
-        #         latency=link_latency,
-        #     )
-        # )
-        # link_count += 1
+        )
+        link_count += 1
+        ext_links.append(
+            ExtLink(
+                link_id=link_count,
+                ext_node=dir_nodes[1],
+                int_node=routers[num_columns - 1],
+                latency=link_latency,
+            )
+        )
+        link_count += 1
+        ext_links.append(
+            ExtLink(
+                link_id=link_count,
+                ext_node=dir_nodes[2],
+                int_node=routers[num_routers - num_columns],
+                latency=link_latency,
+            )
+        )
+        link_count += 1
+        ext_links.append(
+            ExtLink(
+                link_id=link_count,
+                ext_node=dir_nodes[3],
+                int_node=routers[num_routers - 1],
+                latency=link_latency,
+            )
+        )
+        link_count += 1
 
         # Connect the dma nodes to router 0.  These should only be DMA nodes.
         for i, node in enumerate(dma_nodes):
