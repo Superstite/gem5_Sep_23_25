@@ -66,14 +66,13 @@ with lower case letters and numbers.  Size 2 KiB.  Addresses are limited to
 1 KiB.
 """
 
-
 import random
 import string
 
 
 class transaction:
-    """ contains read_not_write, address, length, byte_enable,
-      bus_width, data_width, data_pointer, stream_width """
+    """contains read_not_write, address, length, byte_enable,
+    bus_width, data_width, data_pointer, stream_width"""
 
     def __init__(self, **a):
         self.__dict__ = a
@@ -445,6 +444,7 @@ class FragmenterDifference(Exception):
 
 
 from subprocess import Popen, PIPE
+
 
 # test a single fragment in multiple ways
 def test_a_fragment(f, ms):

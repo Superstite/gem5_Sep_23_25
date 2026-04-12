@@ -1,8 +1,13 @@
-from m5.params import *
 from m5.objects import *
+from m5.objects import (
+    GarnetExtLink,
+    GarnetIntLink,
+    GarnetNetwork,
+    GarnetNetworkInterface,
+    GarnetRouter,
+)
+from m5.params import *
 
-from m5.objects import GarnetNetwork, GarnetExtLink, GarnetIntLink, \
-                        GarnetRouter, GarnetNetworkInterface
 
 class GarnetMesh(GarnetNetwork):
 
@@ -12,31 +17,42 @@ class GarnetMesh(GarnetNetwork):
 
     # Makes a generic mesh
 
-    def connectControllers(self, l1controllers, l2controllers, dircontrollers, dmacontrollers, ncpu):
+    def connectControllers(
+        self,
+        l1controllers,
+        l2controllers,
+        dircontrollers,
+        dmacontrollers,
+        ncpu,
+    ):
         num_routers = ncpu
-        #Sneha_Feb11_22
+        # Sneha_Feb11_22
         # num_rows = 12
         num_rows = 8
         print("Number of rows=", num_rows)
-        #num_rows = 2
-        #Sneha_Feb11_22
-        nodes = l1controllers+l2controllers+dircontrollers+dmacontrollers
+        # num_rows = 2
+        # Sneha_Feb11_22
+        nodes = l1controllers + l2controllers + dircontrollers + dmacontrollers
 
         # default values for link latency and router latency.
         # Can be over-ridden on a per link/router basis
-        # link_latency = 8                                            
-        link_latency = 4                                            #Sneha, done to check functional read not implemented
+        # link_latency = 8
+        link_latency = (
+            4  # Sneha, done to check functional read not implemented
+        )
         router_latency = 1
 
         # There must be an evenly divisible number of controllers to routers
         # Also, obviously the number or rows must be <= the number of routers
         cntrls_per_router, remainder = divmod(len(nodes), num_routers)
-        assert(num_rows > 0 and num_rows <= num_routers)
+        assert num_rows > 0 and num_rows <= num_routers
         num_columns = int(num_routers / num_rows)
         # assert(num_columns * num_rows == num_routers)
         # Create the routers in the mesh
-        self.routers = [GarnetRouter(router_id=i, latency = router_latency) \
-            for i in range(num_routers)]
+        self.routers = [
+            GarnetRouter(router_id=i, latency=router_latency)
+            for i in range(num_routers)
+        ]
 
         # link counter to set unique link ids
         link_count = 0
@@ -51,52 +67,73 @@ class GarnetMesh(GarnetNetwork):
             else:
                 remainder_nodes.append(nodes[node_index])
 
-
         # Connect each node to the appropriate router
         ext_links = []
-        for (i, n) in enumerate(network_nodes):
+        for i, n in enumerate(network_nodes):
             cntrl_level, router_id = divmod(i, num_routers)
-            assert(cntrl_level < cntrls_per_router)
-            ext_links.append(GarnetExtLink(link_id=link_count, ext_node=n,
-                                    int_node=self.routers[router_id],
-                                    latency = link_latency))
+            assert cntrl_level < cntrls_per_router
+            ext_links.append(
+                GarnetExtLink(
+                    link_id=link_count,
+                    ext_node=n,
+                    int_node=self.routers[router_id],
+                    latency=link_latency,
+                )
+            )
             link_count += 1
 
-        c=21
+        c = 21
         # c=6
-        for (i, n) in enumerate(l2controllers):
-            ext_links.append(GarnetExtLink(link_id=link_count, ext_node=n, 
-            int_node=self.routers[c],
-            latency = link_latency))
+        for i, n in enumerate(l2controllers):
+            ext_links.append(
+                GarnetExtLink(
+                    link_id=link_count,
+                    ext_node=n,
+                    int_node=self.routers[c],
+                    latency=link_latency,
+                )
+            )
             # c=74
-            c=42
+            c = 42
             # c=9
             link_count += 1
 
-        c=21
+        c = 21
         # c=6
-        for (i, n) in enumerate(dircontrollers):
-            ext_links.append(GarnetExtLink(link_id=link_count, ext_node=n, 
-            int_node=self.routers[c],
-            latency = link_latency))
+        for i, n in enumerate(dircontrollers):
+            ext_links.append(
+                GarnetExtLink(
+                    link_id=link_count,
+                    ext_node=n,
+                    int_node=self.routers[c],
+                    latency=link_latency,
+                )
+            )
             # c=74
-            c=42
+            c = 42
             # c=9
             link_count += 1
 
         # Connect the remaining nodes to router 0.  These should only be
         # DMA nodes.
-        for (i, node) in enumerate(dmacontrollers):
-            assert(i < remainder)
-            ext_links.append(GarnetExtLink(link_id=link_count, ext_node=node,
-                                    int_node=self.routers[0],
-                                    latency = link_latency))
+        for i, node in enumerate(dmacontrollers):
+            assert i < remainder
+            ext_links.append(
+                GarnetExtLink(
+                    link_id=link_count,
+                    ext_node=node,
+                    int_node=self.routers[0],
+                    latency=link_latency,
+                )
+            )
             link_count += 1
 
         self.ext_links = ext_links
 
-        self.netifs = [GarnetNetworkInterface(id=i) \
-                    for (i,n) in enumerate(self.ext_links)]
+        self.netifs = [
+            GarnetNetworkInterface(id=i)
+            for (i, n) in enumerate(self.ext_links)
+        ]
 
         # Create the mesh links.
         int_links = []
@@ -104,62 +141,77 @@ class GarnetMesh(GarnetNetwork):
         # East output to West input links (weight = 1)
         for row in range(num_rows):
             for col in range(num_columns):
-                if (col + 1 < num_columns):
+                if col + 1 < num_columns:
                     east_out = col + (row * num_columns)
                     west_in = (col + 1) + (row * num_columns)
-                    int_links.append(GarnetIntLink(link_id=link_count,
-                                             src_node=self.routers[east_out],
-                                             dst_node=self.routers[west_in],
-                                             src_outport="East",
-                                             dst_inport="West",
-                                             latency = link_latency,
-                                             weight=1))
+                    int_links.append(
+                        GarnetIntLink(
+                            link_id=link_count,
+                            src_node=self.routers[east_out],
+                            dst_node=self.routers[west_in],
+                            src_outport="East",
+                            dst_inport="West",
+                            latency=link_latency,
+                            weight=1,
+                        )
+                    )
                     link_count += 1
 
         # West output to East input links (weight = 1)
         for row in range(num_rows):
             for col in range(num_columns):
-                if (col + 1 < num_columns):
+                if col + 1 < num_columns:
                     east_in = col + (row * num_columns)
                     west_out = (col + 1) + (row * num_columns)
-                    int_links.append(GarnetIntLink(link_id=link_count,
-                                             src_node=self.routers[west_out],
-                                             dst_node=self.routers[east_in],
-                                             src_outport="West",
-                                             dst_inport="East",
-                                             latency = link_latency,
-                                             weight=1))
+                    int_links.append(
+                        GarnetIntLink(
+                            link_id=link_count,
+                            src_node=self.routers[west_out],
+                            dst_node=self.routers[east_in],
+                            src_outport="West",
+                            dst_inport="East",
+                            latency=link_latency,
+                            weight=1,
+                        )
+                    )
                     link_count += 1
 
         # North output to South input links (weight = 2)
         for col in range(num_columns):
             for row in range(num_rows):
-                if (row + 1 < num_rows):
+                if row + 1 < num_rows:
                     north_out = col + (row * num_columns)
                     south_in = col + ((row + 1) * num_columns)
-                    int_links.append(GarnetIntLink(link_id=link_count,
-                                             src_node=self.routers[north_out],
-                                             dst_node=self.routers[south_in],
-                                             src_outport="North",
-                                             dst_inport="South",
-                                             latency = link_latency,
-                                             weight=2))
+                    int_links.append(
+                        GarnetIntLink(
+                            link_id=link_count,
+                            src_node=self.routers[north_out],
+                            dst_node=self.routers[south_in],
+                            src_outport="North",
+                            dst_inport="South",
+                            latency=link_latency,
+                            weight=2,
+                        )
+                    )
                     link_count += 1
 
         # South output to North input links (weight = 2)
         for col in range(num_columns):
             for row in range(num_rows):
-                if (row + 1 < num_rows):
+                if row + 1 < num_rows:
                     north_in = col + (row * num_columns)
                     south_out = col + ((row + 1) * num_columns)
-                    int_links.append(GarnetIntLink(link_id=link_count,
-                                             src_node=self.routers[south_out],
-                                             dst_node=self.routers[north_in],
-                                             src_outport="South",
-                                             dst_inport="North",
-                                             latency = link_latency,
-                                             weight=2))
+                    int_links.append(
+                        GarnetIntLink(
+                            link_id=link_count,
+                            src_node=self.routers[south_out],
+                            dst_node=self.routers[north_in],
+                            src_outport="South",
+                            dst_inport="North",
+                            latency=link_latency,
+                            weight=2,
+                        )
+                    )
                     link_count += 1
-
 
         self.int_links = int_links

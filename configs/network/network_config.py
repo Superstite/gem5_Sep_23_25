@@ -24,17 +24,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import m5
 import argparse
 import importlib
+
+import m5
 from m5.objects import Root
+
 from gem5.components.boards.test_board import TestBoard
-# from gem5.components.cachehierarchies.ruby.mi_example_cache_network import \
-            # MIExampleCacheNetwork
-from gem5.components.processors.linear_generator import LinearGenerator
+
 # from gem5.components.memory import SingleChannelDDR3_1600
-from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_network import MESITwoLevelCacheNetwork
+from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_network import (
+    MESITwoLevelCacheNetwork,
+)
 from gem5.components.memory import DualChannelDDR4_2400
+
+# from gem5.components.cachehierarchies.ruby.mi_example_cache_network import \
+# MIExampleCacheNetwork
+from gem5.components.processors.linear_generator import LinearGenerator
 
 parser = argparse.ArgumentParser(
     description="A traffic generator that can be used to test a gem5 "
@@ -64,9 +70,8 @@ cache_hierarchy = MESITwoLevelCacheNetwork(
     l1i_assoc=8,
     l2_size="256kB",
     l2_assoc=16,
-    num_l2_banks=2
+    num_l2_banks=2,
 )
-
 
 
 args = parser.parse_args()
@@ -80,11 +85,11 @@ memory = DualChannelDDR4_2400(size="3GB")
 # )
 
 generator = LinearGenerator(
-            duration="250us",
-            rate="40GB/s",
-            num_cores=args.generator_cores,
-            max_addr=memory.get_size(),
-        )
+    duration="250us",
+    rate="40GB/s",
+    num_cores=args.generator_cores,
+    max_addr=memory.get_size(),
+)
 
 motherboard = TestBoard(
     clk_freq="3GHz",
@@ -97,6 +102,4 @@ m5.instantiate()
 generator.start_traffic()
 print("Beginning simulation!")
 exit_event = m5.simulate()
-print(
-    "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
-)
+print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}.")

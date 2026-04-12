@@ -24,27 +24,26 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .caches.mi_example.l1_cache import L1Cache
-from .caches.mi_example.dma_controller import DMAController
-from .caches.mi_example.directory import Directory
-from .topologies.garnet_mesh import GarnetMesh
-from .topologies.garnet_pt2pt import GarnetPt2Pt
-from .topologies.simple_pt2pt import SimplePt2Pt
-from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
-from ..abstract_cache_hierarchy import AbstractCacheHierarchy
-from ...boards.abstract_board import AbstractBoard
+from m5.objects import (
+    DMASequencer,
+    RubyPortProxy,
+    RubySequencer,
+    RubySystem,
+)
+
 from ....coherence_protocol import CoherenceProtocol
 from ....isas import ISA
 from ....utils.override import overrides
 from ....utils.requires import requires
-
-
-from m5.objects import (
-    RubySystem,
-    RubySequencer,
-    DMASequencer,
-    RubyPortProxy,
-)
+from ...boards.abstract_board import AbstractBoard
+from ..abstract_cache_hierarchy import AbstractCacheHierarchy
+from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
+from .caches.mi_example.directory import Directory
+from .caches.mi_example.dma_controller import DMAController
+from .caches.mi_example.l1_cache import L1Cache
+from .topologies.garnet_mesh import GarnetMesh
+from .topologies.garnet_pt2pt import GarnetPt2Pt
+from .topologies.simple_pt2pt import SimplePt2Pt
 
 
 class MIExampleCacheNetwork(AbstractRubyCacheHierarchy):
@@ -57,7 +56,7 @@ class MIExampleCacheNetwork(AbstractRubyCacheHierarchy):
         self,
         size: str,
         assoc: str,
-        network = str,
+        network=str,
     ):
         """
         :param size: The size of each cache in the heirarchy.
@@ -68,6 +67,7 @@ class MIExampleCacheNetwork(AbstractRubyCacheHierarchy):
         self._size = size
         self._assoc = assoc
         self._network = network
+
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
 
@@ -76,11 +76,11 @@ class MIExampleCacheNetwork(AbstractRubyCacheHierarchy):
         self.ruby_system = RubySystem()
 
         # Ruby's global network.
-        if self._network == 'SimplePt2Pt': 
+        if self._network == "SimplePt2Pt":
             self.ruby_system.network = SimplePt2Pt(self.ruby_system)
-        elif self._network == 'GarnetPt2Pt':
+        elif self._network == "GarnetPt2Pt":
             self.ruby_system.network = GarnetPt2Pt(self.ruby_system)
-        elif self._network == 'GarnetMesh':
+        elif self._network == "GarnetMesh":
             self.ruby_system.network = GarnetMesh(self.ruby_system)
         else:
             raise ValueError(f"network {self._network} is not implemented.")
@@ -173,12 +173,12 @@ class MIExampleCacheNetwork(AbstractRubyCacheHierarchy):
         if len(self._dma_controllers) != 0:
             self.ruby_system.dma_controllers = self._dma_controllers
 
-        if (self._network == 'GarnetMesh'):
+        if self._network == "GarnetMesh":
             self.ruby_system.network.connectControllers(
                 self._controllers
                 + self._directory_controllers
                 + self._dma_controllers,
-                len(self._controllers)
+                len(self._controllers),
             )
         else:
             self.ruby_system.network.connectControllers(
@@ -186,7 +186,7 @@ class MIExampleCacheNetwork(AbstractRubyCacheHierarchy):
                 + self._directory_controllers
                 + self._dma_controllers
             )
-        if (self._network == 'SimplePt2Pt'):
+        if self._network == "SimplePt2Pt":
             self.ruby_system.network.setup_buffers()
 
         # Set up a proxy port for the system_port. Used for load binaries and

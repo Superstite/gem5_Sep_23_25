@@ -24,40 +24,53 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import GarnetNetwork, GarnetExtLink, GarnetIntLink, GarnetRouter, GarnetNetworkInterface
+from m5.objects import (
+    GarnetExtLink,
+    GarnetIntLink,
+    GarnetNetwork,
+    GarnetNetworkInterface,
+    GarnetRouter,
+)
 
 
 class GarnetPt2Pt(GarnetNetwork):
-    """A point-to-point network using garnet.
-    """
+    """A point-to-point network using garnet."""
 
     def __init__(self, ruby_system):
         super().__init__()
-
 
         self.ruby_system = ruby_system
 
     def connectControllers(self, controllers):
         # Create one router/switch per controller in the system
         self.routers = [
-            GarnetRouter(router_id = i) for i in range(len(controllers))
+            GarnetRouter(router_id=i) for i in range(len(controllers))
         ]
-        self.ext_links = [GarnetExtLink(link_id=i, ext_node=c,
-                                        int_node=self.routers[i],
-                                        latency = 8)
-                          for i, c in enumerate(controllers)]
+        self.ext_links = [
+            GarnetExtLink(
+                link_id=i, ext_node=c, int_node=self.routers[i], latency=8
+            )
+            for i, c in enumerate(controllers)
+        ]
 
-        self.netifs = [GarnetNetworkInterface(id=i) \
-                    for (i,n) in enumerate(self.ext_links)]
+        self.netifs = [
+            GarnetNetworkInterface(id=i)
+            for (i, n) in enumerate(self.ext_links)
+        ]
 
         link_count = 0
         self.int_links = []
-        for ri in (self.routers):
-            for rj in (self.routers):
-                if ri == rj: continue # Don't connect a router to itself!
+        for ri in self.routers:
+            for rj in self.routers:
+                if ri == rj:
+                    continue  # Don't connect a router to itself!
                 link_count += 1
-                self.int_links.append(GarnetIntLink(link_id = link_count,
-                                                    src_node = ri,
-                                                    dst_node = rj,
-                                                    latency = 8,
-                                                    weight  = 1))
+                self.int_links.append(
+                    GarnetIntLink(
+                        link_id=link_count,
+                        src_node=ri,
+                        dst_node=rj,
+                        latency=8,
+                        weight=1,
+                    )
+                )
