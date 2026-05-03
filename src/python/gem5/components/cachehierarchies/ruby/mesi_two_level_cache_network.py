@@ -25,25 +25,29 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
-from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
+from m5.objects import (
+    DMASequencer,
+    RubyPortProxy,
+    RubySequencer,
+    RubySystem,
+)
+
 from ....coherence_protocol import CoherenceProtocol
 from ....isas import ISA
-from ...boards.abstract_board import AbstractBoard
 from ....utils.requires import requires
-
-from .topologies.garnet_pt2pt import GarnetPt2Pt
-from .topologies.simple_pt2pt import SimplePt2Pt
-from .caches.mesi_two_level.l1_cache import L1Cache
-from .caches.mesi_two_level.l2_cache import L2Cache
+from ...boards.abstract_board import AbstractBoard
+from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
+from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from .caches.mesi_two_level.directory import Directory
 from .caches.mesi_two_level.dma_controller import DMAController
-
-from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
-
-from .topologies.garnet_mesh import GarnetMesh
+from .caches.mesi_two_level.l1_cache import L1Cache
+from .caches.mesi_two_level.l2_cache import L2Cache
 from .topologies.custom_mesh import CustomMesh
-# from .topologies.garnet_mesh_Sneha_Rivu import GarnetMesh      #Not working, dont know why
+from .topologies.garnet_mesh import GarnetMesh
+from .topologies.garnet_pt2pt import GarnetPt2Pt
+from .topologies.simple_pt2pt import SimplePt2Pt
+
+
 class MESITwoLevelCacheNetwork(
     AbstractRubyCacheHierarchy, AbstractTwoLevelCacheHierarchy
 ):
@@ -64,7 +68,7 @@ class MESITwoLevelCacheNetwork(
         l2_size: str,
         l2_assoc: str,
         num_l2_banks: int,
-        
+        high_criticality_src_ids: list[int] = [],
     ):
         AbstractRubyCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
@@ -78,6 +82,7 @@ class MESITwoLevelCacheNetwork(
         )
 
         self._num_l2_banks = num_l2_banks
+        self._high_criticality_src_ids = high_criticality_src_ids
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
 
@@ -85,12 +90,14 @@ class MESITwoLevelCacheNetwork(
 
         cache_line_size = board.get_cache_line_size()
 
-        self.ruby_system = RubySystem()
+        self.ruby_system = RubySystem(
+            high_criticality_src_ids=self._high_criticality_src_ids
+        )
 
         # MESI_Two_Level needs 5 virtual networks
         self.ruby_system.number_of_virtual_networks = 5
 
-        #self.ruby_system.network = SimplePt2Pt(self.ruby_system)
+        # self.ruby_system.network = SimplePt2Pt(self.ruby_system)
         self.ruby_system.network = CustomMesh(self.ruby_system)
         # Configure custom Routing algorithm
         self.ruby_system.network.routing_algorithm = 2
@@ -177,7 +184,7 @@ class MESITwoLevelCacheNetwork(
         self.ruby_system.num_of_sequencers = len(self._l1_controllers) + len(
             self._dma_controllers
         )
-       
+
         self.ruby_system.l1_controllers = self._l1_controllers
         self.ruby_system.l2_controllers = self._l2_controllers
         self.ruby_system.directory_controllers = self._directory_controllers
@@ -187,7 +194,10 @@ class MESITwoLevelCacheNetwork(
 
         print("Number of l1 controllers = ", len(self._l1_controllers))
         print("Number of l2 controllers = ", len(self._l2_controllers))
-        print("Number of directory controllers = ", len(self._directory_controllers))
+        print(
+            "Number of directory controllers = ",
+            len(self._directory_controllers),
+        )
         print("Number of dma controllers = ", len(self._dma_controllers))
 
         first_dir_loc = 21
@@ -196,11 +206,16 @@ class MESITwoLevelCacheNetwork(
             self._l1_controllers,
             self._l2_controllers,
             self._directory_controllers,
-            self._dma_controllers, len(self._l1_controllers), first_dir_loc, second_dir_loc
+            self._dma_controllers,
+            len(self._l1_controllers),
+            first_dir_loc,
+            second_dir_loc,
         )
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
         self.ruby_system.sys_port_proxy = RubyPortProxy()
-        board.cache_hierarchy.ruby_system.sys_port_proxy.ruby_system = self.ruby_system
+        board.cache_hierarchy.ruby_system.sys_port_proxy.ruby_system = (
+            self.ruby_system
+        )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)

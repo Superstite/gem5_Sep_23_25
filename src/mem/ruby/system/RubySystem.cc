@@ -71,6 +71,7 @@ namespace ruby
 
 RubySystem::RubySystem(const Params &p)
     : ClockedObject(p), m_access_backing_store(p.access_backing_store),
+      m_high_criticality_src_ids(p.high_criticality_src_ids),
       m_cache_recorder(NULL)
 {
     m_randomization = p.randomization;

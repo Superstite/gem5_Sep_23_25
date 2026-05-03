@@ -62,3 +62,7 @@ class RubySystem(ClockedObject):
     all_instructions = Param.Bool(False, "")
     num_of_sequencers = Param.Int("")
     number_of_virtual_networks = Param.Unsigned("")
+
+    high_criticality_src_ids = VectorParam.Int(
+        [], "List of source IDs that should have high criticality packets"
+    )

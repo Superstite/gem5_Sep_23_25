@@ -79,6 +79,8 @@ class RubySystem : public ClockedObject
     memory::SimpleMemory *getPhysMem() { return m_phys_mem; }
     Cycles getStartCycle() { return m_start_cycle; }
     bool getAccessBackingStore() { return m_access_backing_store; }
+    const std::vector<int>& getHighCriticalitySrcIds() const {
+      return m_high_criticality_src_ids; }
 
     // Public Methods
     Profiler*
@@ -154,6 +156,7 @@ class RubySystem : public ClockedObject
     bool m_cooldown_enabled = false;
     memory::SimpleMemory *m_phys_mem;
     const bool m_access_backing_store;
+    const std::vector<int> m_high_criticality_src_ids;
 
     //std::vector<Network *> m_networks;
     std::vector<std::unique_ptr<Network>> m_networks;

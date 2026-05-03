@@ -41,6 +41,8 @@
 
 #include "mem/ruby/system/RubyPort.hh"
 
+#include <algorithm>
+
 #include "base/compiler.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/Config.hh"
@@ -295,21 +297,11 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
     if (pkt->getSrcId() < 0 || pkt->getSrcId() >= 64) {
         panic("Source ID of the packet is not set!\n");
     }
-    if (pkt->getSrcId() == 0 || pkt->getSrcId() == 2 || pkt->getSrcId() == 3 \
-    || pkt->getSrcId() == 4 || pkt->getSrcId() == 6 \
-        || pkt->getSrcId() == 7 || pkt->getSrcId() == 9 \
-        || pkt->getSrcId() == 10 || pkt->getSrcId() == 11 \
-        || pkt->getSrcId() == 13 || pkt->getSrcId() == 14 \
-        || pkt->getSrcId() == 16 || pkt->getSrcId() == 17 \
-        || pkt->getSrcId() == 18 || pkt->getSrcId() == 20 \
-        || pkt->getSrcId() == 21 || pkt->getSrcId() == 23 \
-        || pkt->getSrcId() == 24 || pkt->getSrcId() == 25 \
-        || pkt->getSrcId() == 27 || pkt->getSrcId() == 28 \
-        || pkt->getSrcId() == 30 || pkt->getSrcId() == 31 \
-        || pkt->getSrcId() == 32 || pkt->getSrcId() == 34 \
-        ) {
+    const auto& high_crit_ids =
+        owner.m_ruby_system->getHighCriticalitySrcIds();
+    if (std::find(high_crit_ids.begin(), high_crit_ids.end(),
+    pkt->getSrcId()) != high_crit_ids.end()) {
         pkt->setCriticality(gem5::Criticality::HI);
-
     }
     // Submit the ruby request
     RequestStatus requestStatus = owner.makeRequest(pkt);
