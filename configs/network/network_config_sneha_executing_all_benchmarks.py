@@ -49,6 +49,50 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "generator_cores", type=int, help="The number of generator cores to use."
 )
+parser.add_argument(
+    "--routing-algorithm",
+    type=int,
+    default=1,
+    help="Garnet routing algorithm: 0 table, 1 XY, 2 custom.",
+)
+parser.add_argument(
+    "--num-rows",
+    type=int,
+    default=8,
+    help="Rows in the logical mesh used by the routing algorithm.",
+)
+parser.add_argument(
+    "--num-cols",
+    type=int,
+    default=8,
+    help="Columns in the logical mesh used by the routing algorithm.",
+)
+parser.add_argument(
+    "--first-dir-loc",
+    type=int,
+    default=21,
+    help="Router hosting the first L2/directory memory-side controller.",
+)
+parser.add_argument(
+    "--second-dir-loc",
+    type=int,
+    default=42,
+    help="Router hosting the second L2/directory memory-side controller.",
+)
+parser.add_argument(
+    "--max-ticks",
+    type=int,
+    default=1000000,
+    help=(
+        "Stop the simulation after this many ticks and dump stats. "
+        "Set to 0 to run until the workload exits."
+    ),
+)
+parser.add_argument(
+    "--initialize-only",
+    action="store_true",
+    help="Instantiate the system, dump stats, and exit without simulating.",
+)
 
 args = parser.parse_args()
 
@@ -60,6 +104,11 @@ cache_hierarchy = MESITwoLevelCacheNetwork(
     l2_size="256kB",
     l2_assoc=16,
     num_l2_banks=2,
+    routing_algorithm=args.routing_algorithm,
+    num_rows=args.num_rows,
+    num_cols=args.num_cols,
+    first_dir_loc=args.first_dir_loc,
+    second_dir_loc=args.second_dir_loc,
 )
 
 memory = DualChannelDDR4_2400(size="8GB")
@@ -263,11 +312,26 @@ board.set_se_multi_binary_workload(
 )
 
 # Lastly we run the simulation.
-simulator = Simulator(board=board)
-simulator.run()
-
-print(
-    "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+simulator = Simulator(
+    board=board,
+    max_ticks=args.max_ticks if args.max_ticks > 0 else m5.MaxTick,
 )
+if args.initialize_only:
+    simulator._instantiate()
+    m5.stats.dump()
+else:
+    simulator.run()
+    m5.stats.dump()
+
+if args.initialize_only:
+    print(
+        "Exiting @ tick {} after initialization-only stats dump.".format(
+            simulator.get_current_tick()
+        )
+    )
+else:
+    print(
+        "Exiting @ tick {} because {}.".format(
+            simulator.get_current_tick(), simulator.get_last_exit_event_cause()
+        )
+    )

@@ -618,6 +618,15 @@ GarnetNetwork::update_traffic_distribution(RouteInfo route)
 }
 
 bool
+GarnetNetwork::functionalRead(Packet *pkt)
+{
+    WriteMask mask;
+    RubySystem *rs = params().ruby_system;
+    mask.setBlockSize(rs->getBlockSizeBytes());
+    return functionalRead(pkt, mask);
+}
+
+bool
 GarnetNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
