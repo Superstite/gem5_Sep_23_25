@@ -96,7 +96,20 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-cache_hierarchy = MESITwoLevelCacheNetwork(
+
+class CriticalityMESITwoLevelCacheNetwork(MESITwoLevelCacheNetwork):
+    def incorporate_cache(self, board):
+        super().incorporate_cache(board)
+        # Set L1 cache sequencer criticalities based on benchmark characteristics
+        for i, controller in enumerate(self._l1_controllers):
+            binary_idx = i % 7
+            if binary_idx in [0, 1, 2, 5, 6]:
+                controller.sequencer.criticality = "HI"
+            else:
+                controller.sequencer.criticality = "LO"
+
+
+cache_hierarchy = CriticalityMESITwoLevelCacheNetwork(
     l1d_size="32kB",
     l1d_assoc=8,
     l1i_size="32kB",
@@ -146,12 +159,18 @@ arguments1 = [
     "-s",
 ]
 
+# binary2 = CustomResource(
+#     "/home/sneha/Github_Repos/mibench/automotive/qsort/qsort_large"
+# )
+# arguments2 = [
+#     "/home/sneha/Github_Repos/mibench/automotive/qsort/input_large.dat"
+# ]
+
 binary2 = CustomResource(
-    "/home/sneha/Github_Repos/mibench/automotive/qsort/qsort_large"
+    "/home/sneha/Github_Repos/mibench/automotive/bitcount/bitcnts"
 )
-arguments2 = [
-    "/home/sneha/Github_Repos/mibench/automotive/qsort/input_large.dat"
-]
+arguments2 = ["bitcnts", "1125000"]
+
 
 binary3 = CustomResource(
     "/home/sneha/Github_Repos/mibench/automotive/bitcount/bitcnts"

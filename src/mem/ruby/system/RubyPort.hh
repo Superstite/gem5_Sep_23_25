@@ -212,6 +212,7 @@ class RubyPort : public ClockedObject
     System* system;
 
     std::vector<MemResponsePort *> response_ports;
+    gem5::Criticality m_criticality;
 
   private:
     bool onRetryList(MemResponsePort * port)

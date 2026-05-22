@@ -49,6 +49,7 @@ class RubyPort(ClockedObject):
     cxx_class = "gem5::ruby::RubyPort"
 
     version = Param.Int(0, "")
+    criticality = Param.String("LO", "Criticality of this core")
 
     in_ports = VectorResponsePort(
         "CPU side of this RubyPort/Sequencer. "

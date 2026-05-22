@@ -73,6 +73,12 @@ RubyPort::RubyPort(const Params &p)
 {
     assert(m_version != -1);
 
+    if (p.criticality == "HI") {
+        m_criticality = gem5::Criticality::HI;
+    } else {
+        m_criticality = gem5::Criticality::LO;
+    }
+
     // create the response ports based on the number of connected ports
     for (size_t i = 0; i < p.port_in_ports_connection_count; ++i) {
         response_ports.push_back(new MemResponsePort(csprintf
@@ -291,6 +297,11 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
     pkt->pushSenderState(new SenderState(this));
 
     pkt->setSrcID(owner.m_controller->getMachineID().getNum());
+    pkt->setCriticality(owner.m_criticality);
+
+    DPRINTF(RubyPort, "Request %s for address %#x, packet criticality: %s\n",
+            pkt->cmdString(), pkt->getAddr(),
+            pkt->getCriticality() == gem5::Criticality::HI ? "HI" : "LO");
 
     // Submit the ruby request
     RequestStatus requestStatus = owner.makeRequest(pkt);
