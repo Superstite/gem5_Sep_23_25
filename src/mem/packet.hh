@@ -903,8 +903,9 @@ class Packet : public Printable, public Extensible<Packet>
            htmReturnReason(HtmCacheFailure::NO_FAIL),
            htmTransactionUid(0),
            crit(Criticality::LO),
+           src_id(-1),
            headerDelay(0), snoopDelay(0),
-           payloadDelay(0), senderState(NULL), src_id(-1)
+           payloadDelay(0), senderState(NULL)
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -945,8 +946,9 @@ class Packet : public Printable, public Extensible<Packet>
            htmReturnReason(HtmCacheFailure::NO_FAIL),
            htmTransactionUid(0),
            crit(Criticality::LO),
+           src_id(-1),
            headerDelay(0),
-           snoopDelay(0), payloadDelay(0), senderState(NULL), src_id(-1)
+           snoopDelay(0), payloadDelay(0), senderState(NULL)
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -975,10 +977,11 @@ class Packet : public Printable, public Extensible<Packet>
            htmReturnReason(HtmCacheFailure::NO_FAIL),
            htmTransactionUid(0),
            crit(pkt->getCriticality()),
+           src_id(pkt->src_id),
            headerDelay(pkt->headerDelay),
            snoopDelay(0),
            payloadDelay(pkt->payloadDelay),
-           senderState(pkt->senderState), src_id(pkt->src_id)
+           senderState(pkt->senderState)
     {
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
