@@ -123,6 +123,22 @@ def define_options(parser):
         help="""SimpleNetwork links uses a separate physical
             channel for each virtual network""",
     )
+    parser.add_argument(
+        "--enable-criticality",
+        action="store_true",
+        default=False,
+        help="""enable mixed-criticality flit tagging in garnet.
+            Flits injected by network interfaces listed in
+            --high-criticality-nis are tagged high-criticality.""",
+    )
+    parser.add_argument(
+        "--high-criticality-nis",
+        action="store",
+        type=str,
+        default="",
+        help="""comma-separated list of network-interface ids whose
+            injected flits are high-criticality, e.g. '0,15'.""",
+    )
 
 
 def create_network(options, ruby):
@@ -172,6 +188,15 @@ def init_network(options, network, InterfaceClass):
         network.ni_flit_size = options.link_width_bits / 8
         network.routing_algorithm = options.routing_algorithm
         network.garnet_deadlock_threshold = options.garnet_deadlock_threshold
+
+        # Mixed-criticality flit tagging
+        network.enable_criticality = options.enable_criticality
+        if getattr(options, "high_criticality_nis", ""):
+            network.high_criticality_nis = [
+                int(x)
+                for x in options.high_criticality_nis.split(",")
+                if x != ""
+            ]
 
         # Create Bridges and connect them to the corresponding links
         for intLink in network.int_links:

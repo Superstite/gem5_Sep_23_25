@@ -53,6 +53,18 @@ class GarnetNetwork(RubyNetwork):
         50000, "network-level deadlock threshold"
     )
 
+    # Mixed-criticality support. When enabled, flits injected by the network
+    # interfaces whose id is listed in high_criticality_nis are tagged as
+    # high-criticality (criticality level 1); all others are low-criticality
+    # (level 0). The tag rides on every flit and is available to routing,
+    # switch allocation, and coverage instrumentation.
+    enable_criticality = Param.Bool(
+        False, "enable mixed-criticality flit tagging"
+    )
+    high_criticality_nis = VectorParam.Int(
+        [], "network-interface ids whose injected flits are high-criticality"
+    )
+
 
 class GarnetNetworkInterface(ClockedObject):
     type = "GarnetNetworkInterface"

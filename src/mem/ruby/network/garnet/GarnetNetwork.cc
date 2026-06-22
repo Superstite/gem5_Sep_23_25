@@ -76,6 +76,11 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     if (m_enable_fault_model)
         fault_model = p.fault_model;
 
+    // Mixed-criticality configuration
+    m_enable_criticality = p.enable_criticality;
+    for (int ni : p.high_criticality_nis)
+        m_high_criticality_nis.insert(ni);
+
     m_vnet_type.resize(m_virtual_networks);
 
     for (int i = 0 ; i < m_virtual_networks ; i++) {

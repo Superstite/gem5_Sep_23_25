@@ -87,6 +87,7 @@ flit::serialize(int ser_id, int parts, uint32_t bWidth)
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
+    fl->set_criticality(m_criticality);
     return fl;
 }
 
@@ -102,6 +103,7 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
+    fl->set_criticality(m_criticality);
     return fl;
 }
 
@@ -122,6 +124,7 @@ flit::print(std::ostream& out) const
     out << "Dest Router=" << m_route.dest_router << " ";
     out << "Set Time=" << m_time << " ";
     out << "Width=" << m_width<< " ";
+    out << "Criticality=" << m_criticality << " ";
     out << "]";
 }
 

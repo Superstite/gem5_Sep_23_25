@@ -451,6 +451,7 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
                 oPort->bitWidth(), curTick());
 
             fl->set_src_delay(curTick() - msg_ptr->getTime());
+            fl->set_criticality(m_net_ptr->get_criticality_level(m_id));
             niOutVcs[vc].insert(fl);
         }
 

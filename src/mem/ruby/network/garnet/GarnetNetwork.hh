@@ -33,6 +33,7 @@
 #define __MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
 
 #include <iostream>
+#include <unordered_set>
 #include <vector>
 
 #include "mem/ruby/network/Network.hh"
@@ -83,6 +84,18 @@ class GarnetNetwork : public Network
 
     bool isFaultModelEnabled() const { return m_enable_fault_model; }
     FaultModel* fault_model;
+
+    // Mixed-criticality: criticality level of flits injected by a given
+    // network interface. Returns 0 (low-criticality) when the feature is
+    // disabled or the source NI is not tagged as high-criticality.
+    bool isCriticalityEnabled() const { return m_enable_criticality; }
+    int
+    get_criticality_level(int src_ni) const
+    {
+        if (!m_enable_criticality)
+            return 0;
+        return m_high_criticality_nis.count(src_ni) ? 1 : 0;
+    }
 
 
     // Internal configuration
@@ -167,6 +180,10 @@ class GarnetNetwork : public Network
     uint32_t m_buffers_per_data_vc;
     int m_routing_algorithm;
     bool m_enable_fault_model;
+
+    // Mixed-criticality configuration
+    bool m_enable_criticality;
+    std::unordered_set<int> m_high_criticality_nis;
 
     // Statistical variables
     statistics::Vector m_packets_received;
