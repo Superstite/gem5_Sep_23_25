@@ -517,6 +517,64 @@ GarnetNetwork::regStats()
     m_avg_hops.name(name() + ".average_hops");
     m_avg_hops = m_total_hops / sum(m_flits_received);
 
+    // Per-criticality latency (index 0 == LC, 1 == HC)
+    m_flits_received_crit
+        .init(NUM_CRITICALITY_LEVELS_)
+        .name(name() + ".flits_received_crit")
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
+        ;
+    m_packets_received_crit
+        .init(NUM_CRITICALITY_LEVELS_)
+        .name(name() + ".packets_received_crit")
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
+        ;
+    m_flit_network_latency_crit
+        .init(NUM_CRITICALITY_LEVELS_)
+        .name(name() + ".flit_network_latency_crit")
+        .flags(statistics::oneline)
+        ;
+    m_flit_queueing_latency_crit
+        .init(NUM_CRITICALITY_LEVELS_)
+        .name(name() + ".flit_queueing_latency_crit")
+        .flags(statistics::oneline)
+        ;
+    m_packet_network_latency_crit
+        .init(NUM_CRITICALITY_LEVELS_)
+        .name(name() + ".packet_network_latency_crit")
+        .flags(statistics::oneline)
+        ;
+    m_packet_queueing_latency_crit
+        .init(NUM_CRITICALITY_LEVELS_)
+        .name(name() + ".packet_queueing_latency_crit")
+        .flags(statistics::oneline)
+        ;
+
+    for (int i = 0; i < NUM_CRITICALITY_LEVELS_; i++) {
+        const char *cn = (i == 0) ? "LC" : "HC";
+        m_flits_received_crit.subname(i, cn);
+        m_packets_received_crit.subname(i, cn);
+        m_flit_network_latency_crit.subname(i, cn);
+        m_flit_queueing_latency_crit.subname(i, cn);
+        m_packet_network_latency_crit.subname(i, cn);
+        m_packet_queueing_latency_crit.subname(i, cn);
+    }
+
+    m_avg_flit_latency_crit
+        .name(name() + ".average_flit_latency_crit")
+        .flags(statistics::oneline);
+    m_avg_flit_latency_crit =
+        (m_flit_network_latency_crit + m_flit_queueing_latency_crit) /
+        m_flits_received_crit;
+
+    m_avg_packet_latency_crit
+        .name(name() + ".average_packet_latency_crit")
+        .flags(statistics::oneline);
+    m_avg_packet_latency_crit =
+        (m_packet_network_latency_crit + m_packet_queueing_latency_crit) /
+        m_packets_received_crit;
+
     // Links
     m_total_ext_in_link_utilization
         .name(name() + ".ext_in_link_utilization");

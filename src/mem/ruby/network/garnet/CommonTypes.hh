@@ -74,6 +74,10 @@ struct RouteInfo
 
 #define INFINITE_ 10000
 
+// Mixed-criticality: number of distinct criticality levels tracked by the
+// network (0 == low-criticality, 1 == high-criticality).
+#define NUM_CRITICALITY_LEVELS_ 2
+
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5

@@ -155,6 +155,7 @@ void
 NetworkInterface::incrementStats(flit *t_flit)
 {
     int vnet = t_flit->get_vnet();
+    int crit = t_flit->get_criticality();
 
     // Latency
     m_net_ptr->increment_received_flits(vnet);
@@ -168,10 +169,19 @@ NetworkInterface::incrementStats(flit *t_flit)
     m_net_ptr->increment_flit_network_latency(network_delay, vnet);
     m_net_ptr->increment_flit_queueing_latency(queueing_delay, vnet);
 
+    m_net_ptr->increment_received_flits_crit(crit);
+    m_net_ptr->increment_flit_network_latency_crit(network_delay, crit);
+    m_net_ptr->increment_flit_queueing_latency_crit(queueing_delay, crit);
+
     if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
         m_net_ptr->increment_received_packets(vnet);
         m_net_ptr->increment_packet_network_latency(network_delay, vnet);
         m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
+
+        m_net_ptr->increment_received_packets_crit(crit);
+        m_net_ptr->increment_packet_network_latency_crit(network_delay, crit);
+        m_net_ptr->increment_packet_queueing_latency_crit(
+            queueing_delay, crit);
     }
 
     // Hops

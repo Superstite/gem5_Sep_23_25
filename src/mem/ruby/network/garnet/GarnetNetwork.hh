@@ -167,6 +167,53 @@ class GarnetNetwork : public Network
         m_total_hops += hops;
     }
 
+    // Per-criticality counters (clamped to the tracked level range).
+    static int
+    clamp_criticality(int crit)
+    {
+        if (crit < 0)
+            return 0;
+        if (crit >= NUM_CRITICALITY_LEVELS_)
+            return NUM_CRITICALITY_LEVELS_ - 1;
+        return crit;
+    }
+
+    void
+    increment_received_flits_crit(int crit)
+    {
+        m_flits_received_crit[clamp_criticality(crit)]++;
+    }
+
+    void
+    increment_flit_network_latency_crit(Tick latency, int crit)
+    {
+        m_flit_network_latency_crit[clamp_criticality(crit)] += latency;
+    }
+
+    void
+    increment_flit_queueing_latency_crit(Tick latency, int crit)
+    {
+        m_flit_queueing_latency_crit[clamp_criticality(crit)] += latency;
+    }
+
+    void
+    increment_received_packets_crit(int crit)
+    {
+        m_packets_received_crit[clamp_criticality(crit)]++;
+    }
+
+    void
+    increment_packet_network_latency_crit(Tick latency, int crit)
+    {
+        m_packet_network_latency_crit[clamp_criticality(crit)] += latency;
+    }
+
+    void
+    increment_packet_queueing_latency_crit(Tick latency, int crit)
+    {
+        m_packet_queueing_latency_crit[clamp_criticality(crit)] += latency;
+    }
+
     void update_traffic_distribution(RouteInfo route);
     int getNextPacketID() { return m_next_packet_id++; }
 
@@ -216,6 +263,16 @@ class GarnetNetwork : public Network
 
     statistics::Scalar  m_total_hops;
     statistics::Formula m_avg_hops;
+
+    // Per-criticality statistics (index 0 == LC, 1 == HC)
+    statistics::Vector m_flits_received_crit;
+    statistics::Vector m_flit_network_latency_crit;
+    statistics::Vector m_flit_queueing_latency_crit;
+    statistics::Vector m_packets_received_crit;
+    statistics::Vector m_packet_network_latency_crit;
+    statistics::Vector m_packet_queueing_latency_crit;
+    statistics::Formula m_avg_flit_latency_crit;
+    statistics::Formula m_avg_packet_latency_crit;
 
     std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
     std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
