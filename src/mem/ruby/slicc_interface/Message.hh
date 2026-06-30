@@ -126,7 +126,9 @@ class Message
     int getVnet() const { return vnet; }
     void setVnet(int net) { vnet = net; }
     void setCriticality(Criticality c) { m_crit = c; }
-    Criticality getCriticality() const { return m_crit; }
+    // Virtual so generated SLICC message classes (which shadow m_crit with
+    // their own `crit` field) can override and return the field they carry.
+    virtual Criticality getCriticality() const { return m_crit; }
     int getSrcID() const { return m_src_id; }
     void setSrcID(int id) { m_src_id = id; }
 

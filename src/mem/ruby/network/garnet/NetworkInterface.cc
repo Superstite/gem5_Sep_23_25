@@ -435,6 +435,11 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         route.dest_ni = destID;
         route.dest_router = m_net_ptr->get_router_id(destID, vnet);
 
+        // Criticality tag for reconfigurable routing: copy from the Ruby
+        // Message so downstream routers can steer HC flits onto activated
+        // skippable (express) links.
+        route.is_hc = (new_net_msg_ptr->getCriticality() == Criticality_HI);
+
         // initialize hops_traversed to -1
         // so that the first router increments it to 0
         route.hops_traversed = -1;

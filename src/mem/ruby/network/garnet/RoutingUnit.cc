@@ -185,6 +185,11 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
     RoutingAlgorithm routing_algorithm =
         (RoutingAlgorithm) m_router->get_net_ptr()->getRoutingAlgorithm();
 
+    // Phase 1 verification: confirm criticality tag rode in with the flit.
+    DPRINTF(RubyNetwork, "RECONF route@R%d src=%d dst=%d vnet=%d is_hc=%d\n",
+            m_router->get_id(), route.src_router, route.dest_router,
+            route.vnet, route.is_hc);
+
     switch (routing_algorithm) {
         case TABLE_:  outport =
             lookupRoutingTable(route.vnet, route.net_dest); break;
@@ -260,14 +265,55 @@ RoutingUnit::outportComputeXY(RouteInfo route,
     return m_outports_dirn2idx[outport_dirn];
 }
 
-// Template for implementing custom routing algorithm
-// using port directions. (Example adaptive)
+// Reconfigurable criticality-aware routing.
+//
+// Baseline (this commit): plain dimension-order (XY) routing -- deadlock-free,
+// minimal, identical hop sequence to outportComputeXY.  The skippable express
+// links (TwoHop*/diagonals) are NOT yet taken; the hook below marks exactly
+// where HC flits will be steered onto an *active* skippable link (Phase 2/3).
+//
+// route.is_hc carries the flit criticality (Phase 1), so the policy can treat
+// HC and LC differently here.
 int
 RoutingUnit::outportComputeCustom(RouteInfo route,
                                  int inport,
                                  PortDirection inport_dirn)
 {
-    panic("%s placeholder executed", __FUNCTION__);
+    int num_cols = m_router->get_net_ptr()->getNumCols();
+    [[maybe_unused]] int num_rows = m_router->get_net_ptr()->getNumRows();
+    assert(num_rows > 0 && num_cols > 0);
+
+    int my_id = m_router->get_id();
+    int my_x = my_id % num_cols;
+    int my_y = my_id / num_cols;
+
+    int dest_id = route.dest_router;
+    int dest_x = dest_id % num_cols;
+    int dest_y = dest_id / num_cols;
+
+    int x_hops = abs(dest_x - my_x);
+    int y_hops = abs(dest_y - my_y);
+    bool x_dirn = (dest_x >= my_x);
+    bool y_dirn = (dest_y >= my_y);
+
+    assert(!(x_hops == 0 && y_hops == 0));
+
+    // ---- Phase 2/3 hook (not yet active) --------------------------------
+    // if (route.is_hc && skippable link active && it strictly reduces hops):
+    //     return that express outport (e.g. TwoHopEast when x_hops >= 2).
+    // The escape VC must always fall through to the XY move below to preserve
+    // deadlock freedom (Duato's escape-VC theorem).
+    // ---------------------------------------------------------------------
+
+    // Dimension-order (X first, then Y) -- deadlock-free baseline.
+    PortDirection outport_dirn = "Unknown";
+    if (x_hops > 0) {
+        outport_dirn = x_dirn ? "East" : "West";
+    } else {
+        outport_dirn = y_dirn ? "North" : "South";
+    }
+
+    return m_outports_dirn2idx[outport_dirn];
 }
 
 } // namespace garnet

@@ -487,6 +487,25 @@ get${{dm.ident}}() const
 """
                 )
 
+            # Reconfigurable criticality-aware routing: expose the SLICC `crit`
+            # field through the (virtual) base Message::getCriticality(), so
+            # Garnet -- which only holds a Message* at flitisize -- can read the
+            # carried message criticality. Generated message classes shadow the
+            # base m_crit with their own SLICC field, so without this override
+            # base getCriticality() would always return the (unset) base field.
+            if self.isMessage and "crit" in self.data_members:
+                code(
+                    """
+/** \\brief Override of base Message::getCriticality() returning the SLICC
+ *  `crit` field carried by this message. */
+Criticality
+getCriticality() const override
+{
+    return m_crit;
+}
+"""
+                )
+
             # Non-const Get methods for each field
             code("// Non const Accessors methods for each field")
             for dm in self.data_members.values():

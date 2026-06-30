@@ -57,7 +57,7 @@ struct RouteInfo
 {
     RouteInfo()
         : vnet(0), src_ni(0), src_router(0), dest_ni(0), dest_router(0),
-          hops_traversed(0)
+          hops_traversed(0), is_hc(false)
     {}
 
     // destination format for table-based routing
@@ -70,6 +70,11 @@ struct RouteInfo
     int dest_ni;
     int dest_router;
     int hops_traversed;
+
+    // Criticality of the carried message (set at flitisize from the Ruby
+    // Message). Enables criticality-aware reconfigurable routing: HC flits may
+    // be steered onto activated skippable (express) links.
+    bool is_hc;
 };
 
 #define INFINITE_ 10000
