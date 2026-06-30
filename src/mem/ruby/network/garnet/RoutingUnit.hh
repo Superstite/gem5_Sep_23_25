@@ -78,6 +78,9 @@ class RoutingUnit
                              int inport,
                              PortDirection inport_dirn);
 
+    // True if this router has an output port in the given direction.
+    bool hasOutport(PortDirection dirn);
+
     // Returns true if vnet is present in the vector
     // of vnets or if the vector supports all vnets.
     bool supportsVnet(int vnet, std::vector<int> sVnets);

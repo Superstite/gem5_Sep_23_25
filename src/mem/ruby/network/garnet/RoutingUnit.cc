@@ -265,15 +265,27 @@ RoutingUnit::outportComputeXY(RouteInfo route,
     return m_outports_dirn2idx[outport_dirn];
 }
 
+// True if this router has an output port in the given direction (e.g. a
+// skippable express link is only present on routers >=2 hops from the edge).
+bool
+RoutingUnit::hasOutport(PortDirection dirn)
+{
+    return m_outports_dirn2idx.find(dirn) != m_outports_dirn2idx.end();
+}
+
 // Reconfigurable criticality-aware routing.
 //
-// Baseline (this commit): plain dimension-order (XY) routing -- deadlock-free,
-// minimal, identical hop sequence to outportComputeXY.  The skippable express
-// links (TwoHop*/diagonals) are NOT yet taken; the hook below marks exactly
-// where HC flits will be steered onto an *active* skippable link (Phase 2/3).
+// Dimension-order (X first, then Y) baseline for all traffic. HC flits
+// (route.is_hc) additionally take a *same-dimension* 2-hop express link when
+// they are >=2 hops away in the current routing dimension. Staying within the
+// active dimension keeps the route strictly dimension-ordered, so the channel
+// dependency graph remains acyclic -- deadlock-free WITHOUT an escape VC.
+// (Diagonal express links mix dimensions and are deferred to an escape-VC
+// phase.) The 2-hop link saves a router hop + a link traversal, lowering HC
+// latency and offloading HC from the base mesh so LC sees less contention.
 //
-// route.is_hc carries the flit criticality (Phase 1), so the policy can treat
-// HC and LC differently here.
+// Phase 2: express links are always usable; per-link runtime activation flags
+// arrive in Phase 3.
 int
 RoutingUnit::outportComputeCustom(RouteInfo route,
                                  int inport,
@@ -298,22 +310,31 @@ RoutingUnit::outportComputeCustom(RouteInfo route,
 
     assert(!(x_hops == 0 && y_hops == 0));
 
-    // ---- Phase 2/3 hook (not yet active) --------------------------------
-    // if (route.is_hc && skippable link active && it strictly reduces hops):
-    //     return that express outport (e.g. TwoHopEast when x_hops >= 2).
-    // The escape VC must always fall through to the XY move below to preserve
-    // deadlock freedom (Duato's escape-VC theorem).
-    // ---------------------------------------------------------------------
-
-    // Dimension-order (X first, then Y) -- deadlock-free baseline.
-    PortDirection outport_dirn = "Unknown";
+    // Determine the dimension-order base move and its same-dimension 2-hop
+    // express alternative.
+    PortDirection base_dirn = "Unknown";
+    PortDirection express_dirn = "Unknown";
+    int dim_hops = 0;
     if (x_hops > 0) {
-        outport_dirn = x_dirn ? "East" : "West";
+        base_dirn    = x_dirn ? "East"        : "West";
+        express_dirn = x_dirn ? "TwoHopEast"  : "TwoHopWest";
+        dim_hops = x_hops;
     } else {
-        outport_dirn = y_dirn ? "North" : "South";
+        base_dirn    = y_dirn ? "North"        : "South";
+        express_dirn = y_dirn ? "TwoHopNorth"  : "TwoHopSouth";
+        dim_hops = y_hops;
     }
 
-    return m_outports_dirn2idx[outport_dirn];
+    // HC express path: take the 2-hop link only when it strictly progresses
+    // (>=2 hops left in this dimension) and the link exists at this router.
+    if (route.is_hc && dim_hops >= 2 && hasOutport(express_dirn)) {
+        DPRINTF(RubyNetwork,
+                "RECONF_EXPRESS R%d->dst%d via %s (is_hc=1)\n",
+                my_id, dest_id, express_dirn.c_str());
+        return m_outports_dirn2idx[express_dirn];
+    }
+
+    return m_outports_dirn2idx[base_dirn];
 }
 
 } // namespace garnet

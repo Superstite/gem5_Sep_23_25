@@ -70,6 +70,12 @@ p.add_argument("--max-addr", type=int, default=4 * 1024**3)
 p.add_argument("--rd-perc", type=int, default=100)
 p.add_argument("--max-ticks", type=int, default=0)
 p.add_argument("--high-crit-srcs", default="")
+p.add_argument(
+    "--routing-algo",
+    type=int,
+    default=2,
+    help="1 = XY baseline (no express), 2 = custom express routing.",
+)
 args = p.parse_args()
 
 hc_srcs = [int(x) for x in args.high_crit_srcs.split(",") if x.strip() != ""]
@@ -83,6 +89,7 @@ cache_hierarchy = MESITwoLevelCacheNetwork(
     l2_assoc=16,
     num_l2_banks=2,
     high_criticality_src_ids=hc_srcs,
+    routing_algorithm=args.routing_algo,
 )
 
 generator = MixedRateLinearGenerator(
