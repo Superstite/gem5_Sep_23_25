@@ -105,6 +105,12 @@ GarnetNetwork::GarnetNetwork(const Params &p)
         router->setExpressActive(p.express_active);
     }
 
+    // Phase 7a: tag memory-controller (sink) routers.
+    for (int id : p.mc_router_ids) {
+        assert(id >= 0 && id < (int)m_routers.size());
+        m_routers[id]->setMcRouter(true);
+    }
+
     // record the network interfaces
     for (std::vector<ClockedObject*>::const_iterator i = p.netifs.begin();
          i != p.netifs.end(); ++i) {
@@ -157,6 +163,17 @@ GarnetNetwork::reconfigStep()
             m_routers[i]->setExpressActive(false);
             DPRINTF(RubyNetwork, "RECONF_MGR R%d DEACTIVATE flits=%llu\n",
                     i, (unsigned long long)flits);
+        }
+
+        // Phase 7a: two-factor sensing at memory-controller (sink) routers.
+        // hc = demand (F1), lc = donor-VC occupancy proxy (F2). Consumed every
+        // epoch (also resets the counters) so 7c can gate VC merging on them.
+        if (m_routers[i]->isMcRouter()) {
+            uint64_t hc = m_routers[i]->consumeEpochHcFlitCount();
+            uint64_t lc = m_routers[i]->consumeEpochLcFlitCount();
+            DPRINTF(RubyNetwork,
+                    "RECONF_MC R%d hc=%llu lc=%llu\n",
+                    i, (unsigned long long)hc, (unsigned long long)lc);
         }
     }
     schedule(m_reconfig_event, clockEdge(m_reconfig_epoch));

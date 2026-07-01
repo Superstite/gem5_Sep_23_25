@@ -65,6 +65,11 @@ class GarnetNetwork(RubyNetwork):
     reconfig_low_wm = Param.UInt64(
         150, "Per-router flits/epoch below which express links deactivate."
     )
+    mc_router_ids = VectorParam.Int(
+        [],
+        "Phase 7: router ids hosting a memory-controller (Directory) endpoint "
+        "-- where HC funnels and the sink VC bottleneck forms.",
+    )
     enable_fault_model = Param.Bool(False, "enable network fault model")
     fault_model = Param.FaultModel(NULL, "network fault model")
     garnet_deadlock_threshold = Param.UInt32(

@@ -131,6 +131,26 @@ class Router : public BasicRouter, public Consumer
         return c;
     }
 
+    // Phase 7a: this router hosts a memory-controller (Directory) endpoint --
+    // where HC traffic funnels and VC saturation (the sink bottleneck) occurs.
+    void setMcRouter(bool m) { m_is_mc_router = m; }
+    bool isMcRouter() const { return m_is_mc_router; }
+
+    // Phase 7a: read-and-reset HC / LC flits routed this epoch. HC = the
+    // two-factor demand signal (F1); LC proxies donor-VC occupancy (F2).
+    uint64_t consumeEpochHcFlitCount()
+    {
+        uint64_t c = m_epoch_hc_flits;
+        m_epoch_hc_flits = 0;
+        return c;
+    }
+    uint64_t consumeEpochLcFlitCount()
+    {
+        uint64_t c = m_epoch_lc_flits;
+        m_epoch_lc_flits = 0;
+        return c;
+    }
+
     void grant_switch(int inport, flit *t_flit);
     void schedule_wakeup(Cycles time);
 
@@ -168,6 +188,12 @@ class Router : public BasicRouter, public Consumer
 
     // Phase 4: flits routed by this router in the current reconfig epoch.
     uint64_t m_epoch_flit_count = 0;
+
+    // Phase 7a: memory-controller (sink) router flag + per-criticality epoch
+    // flit counts for the two-factor (demand x slack) merge gate.
+    bool m_is_mc_router = false;
+    uint64_t m_epoch_hc_flits = 0;
+    uint64_t m_epoch_lc_flits = 0;
 
     std::vector<std::shared_ptr<InputUnit>> m_input_unit;
     std::vector<std::shared_ptr<OutputUnit>> m_output_unit;

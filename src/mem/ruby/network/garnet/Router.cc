@@ -165,9 +165,17 @@ Router::getInportDirection(int inport)
 int
 Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn)
 {
-    // Phase 4: count routed flits as a per-router congestion proxy consumed by
-    // the reconfiguration manager each epoch.
+    // Phase 4: total flits this epoch (express-manager congestion proxy).
     m_epoch_flit_count++;
+    // Phase 7a: at MC (sink) routers, split by criticality for the two-factor
+    // merge gate -- HC = demand (F1), LC = donor-VC occupancy (F2).
+    if (m_is_mc_router) {
+        if (route.is_hc) {
+            m_epoch_hc_flits++;
+        } else {
+            m_epoch_lc_flits++;
+        }
+    }
     return routingUnit.outportCompute(route, inport, inport_dirn);
 }
 

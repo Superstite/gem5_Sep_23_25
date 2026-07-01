@@ -224,6 +224,12 @@ class MESITwoLevelCacheNetwork(
 
         first_dir_loc = 21
         second_dir_loc = 42
+        # Phase 7: the directory-hosting routers are the memory-controller (sink)
+        # routers where HC funnels and the VC bottleneck forms.
+        self.ruby_system.network.mc_router_ids = [
+            first_dir_loc,
+            second_dir_loc,
+        ]
         self.ruby_system.network.connectControllers(
             self._l1_controllers,
             self._l2_controllers,
