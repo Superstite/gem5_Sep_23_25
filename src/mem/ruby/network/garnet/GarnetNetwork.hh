@@ -164,6 +164,20 @@ class GarnetNetwork : public Network
         m_total_hops += hops;
     }
 
+    // Phase 6: per-criticality packet network latency, so the HC benefit of
+    // reconfigurable routing is visible (aggregate latency dilutes it).
+    void
+    increment_crit_packet_latency(Tick latency, bool is_hc)
+    {
+        if (is_hc) {
+            m_hc_packet_network_latency += latency;
+            m_hc_packets_received++;
+        } else {
+            m_lc_packet_network_latency += latency;
+            m_lc_packets_received++;
+        }
+    }
+
     void update_traffic_distribution(RouteInfo route);
     int getNextPacketID() { return m_next_packet_id++; }
 
@@ -189,6 +203,14 @@ class GarnetNetwork : public Network
     statistics::Formula m_avg_packet_network_latency;
     statistics::Formula m_avg_packet_queueing_latency;
     statistics::Formula m_avg_packet_latency;
+
+    // Phase 6: per-criticality packet network latency (HC vs LC).
+    statistics::Scalar m_hc_packets_received;
+    statistics::Scalar m_hc_packet_network_latency;
+    statistics::Scalar m_lc_packets_received;
+    statistics::Scalar m_lc_packet_network_latency;
+    statistics::Formula m_avg_hc_packet_network_latency;
+    statistics::Formula m_avg_lc_packet_network_latency;
 
     statistics::Vector m_flits_received;
     statistics::Vector m_flits_injected;

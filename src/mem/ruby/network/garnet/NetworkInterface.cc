@@ -172,6 +172,9 @@ NetworkInterface::incrementStats(flit *t_flit)
         m_net_ptr->increment_received_packets(vnet);
         m_net_ptr->increment_packet_network_latency(network_delay, vnet);
         m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
+        // Phase 6: split packet network latency by criticality.
+        m_net_ptr->increment_crit_packet_latency(network_delay,
+                                                 t_flit->get_route().is_hc);
     }
 
     // Hops

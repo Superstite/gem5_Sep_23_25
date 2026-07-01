@@ -502,6 +502,24 @@ GarnetNetwork::regStats()
     m_avg_packet_latency
         = m_avg_packet_network_latency + m_avg_packet_queueing_latency;
 
+    // Phase 6: per-criticality packet network latency (HC vs LC).
+    m_hc_packets_received
+        .name(name() + ".hc_packets_received");
+    m_hc_packet_network_latency
+        .name(name() + ".hc_packet_network_latency");
+    m_lc_packets_received
+        .name(name() + ".lc_packets_received");
+    m_lc_packet_network_latency
+        .name(name() + ".lc_packet_network_latency");
+    m_avg_hc_packet_network_latency
+        .name(name() + ".average_hc_packet_network_latency");
+    m_avg_hc_packet_network_latency =
+        m_hc_packet_network_latency / m_hc_packets_received;
+    m_avg_lc_packet_network_latency
+        .name(name() + ".average_lc_packet_network_latency");
+    m_avg_lc_packet_network_latency =
+        m_lc_packet_network_latency / m_lc_packets_received;
+
     // Flits
     m_flits_received
         .init(m_virtual_networks)
