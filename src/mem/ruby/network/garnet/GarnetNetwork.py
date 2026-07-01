@@ -47,6 +47,11 @@ class GarnetNetwork(RubyNetwork):
     buffers_per_data_vc = Param.UInt32(4, "buffers per data virtual channel")
     buffers_per_ctrl_vc = Param.UInt32(1, "buffers per ctrl virtual channel")
     routing_algorithm = Param.Int(0, "0: Weight-based Table, 1: XY, 2: Custom")
+    express_active = Param.Bool(
+        False,
+        "Phase 3: initial activation state of 2-hop express links (custom "
+        "routing). False = baseline; manager may toggle per-router at runtime.",
+    )
     enable_fault_model = Param.Bool(False, "enable network fault model")
     fault_model = Param.FaultModel(NULL, "network fault model")
     garnet_deadlock_threshold = Param.UInt32(

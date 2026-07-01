@@ -75,6 +75,12 @@ class GarnetNetwork : public Network
     int getNumRows() const { return m_num_rows; }
     int getNumCols() { return m_num_cols; }
 
+    // Phase 3: runtime reconfiguration of 2-hop express links. The Phase 4
+    // traffic-analysis manager calls these to (de)activate express links on
+    // individual routers (or all at once) in response to observed congestion.
+    void setRouterExpressActive(int router_id, bool active);
+    void setAllExpressActive(bool active);
+
     // for network
     uint32_t getNiFlitSize() const { return m_ni_flit_size; }
     uint32_t getBuffersPerDataVC() { return m_buffers_per_data_vc; }

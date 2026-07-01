@@ -95,6 +95,9 @@ GarnetNetwork::GarnetNetwork(const Params &p)
 
         // initialize the router's network pointers
         router->init_net_ptr(this);
+
+        // Phase 3: seed the express-link activation state from the param.
+        router->setExpressActive(p.express_active);
     }
 
     // record the network interfaces
@@ -107,6 +110,21 @@ GarnetNetwork::GarnetNetwork(const Params &p)
 
     // Print Garnet version
     inform("Garnet version %s\n", garnetVersion);
+}
+
+void
+GarnetNetwork::setRouterExpressActive(int router_id, bool active)
+{
+    assert(router_id >= 0 && router_id < (int)m_routers.size());
+    m_routers[router_id]->setExpressActive(active);
+}
+
+void
+GarnetNetwork::setAllExpressActive(bool active)
+{
+    for (auto *router : m_routers) {
+        router->setExpressActive(active);
+    }
 }
 
 void

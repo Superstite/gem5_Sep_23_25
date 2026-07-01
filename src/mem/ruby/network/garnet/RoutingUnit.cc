@@ -325,9 +325,11 @@ RoutingUnit::outportComputeCustom(RouteInfo route,
         dim_hops = y_hops;
     }
 
-    // HC express path: take the 2-hop link only when it strictly progresses
-    // (>=2 hops left in this dimension) and the link exists at this router.
-    if (route.is_hc && dim_hops >= 2 && hasOutport(express_dirn)) {
+    // HC express path: take the 2-hop link only when this router's express
+    // links are active (Phase 3 runtime flag), the flit is HC, it strictly
+    // progresses (>=2 hops left in this dimension), and the link exists here.
+    if (m_express_active && route.is_hc && dim_hops >= 2 &&
+        hasOutport(express_dirn)) {
         DPRINTF(RubyNetwork,
                 "RECONF_EXPRESS R%d->dst%d via %s (is_hc=1)\n",
                 my_id, dest_id, express_dirn.c_str());

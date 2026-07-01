@@ -117,6 +117,11 @@ class Router : public BasicRouter, public Consumer
     PortDirection getInportDirection(int inport);
 
     int route_compute(RouteInfo route, int inport, PortDirection direction);
+
+    // Phase 3: runtime activation of this router's 2-hop express links.
+    void setExpressActive(bool a) { routingUnit.setExpressActive(a); }
+    bool getExpressActive() const { return routingUnit.getExpressActive(); }
+
     void grant_switch(int inport, flit *t_flit);
     void schedule_wakeup(Cycles time);
 

@@ -81,6 +81,12 @@ class RoutingUnit
     // True if this router has an output port in the given direction.
     bool hasOutport(PortDirection dirn);
 
+    // Runtime activation of this router's 2-hop express links (Phase 3).
+    // Default OFF -> custom routing behaves exactly like the XY baseline; the
+    // reconfiguration manager (Phase 4) toggles this per router at runtime.
+    void setExpressActive(bool a) { m_express_active = a; }
+    bool getExpressActive() const { return m_express_active; }
+
     // Returns true if vnet is present in the vector
     // of vnets or if the vector supports all vnets.
     bool supportsVnet(int vnet, std::vector<int> sVnets);
@@ -98,6 +104,9 @@ class RoutingUnit
     std::map<int, PortDirection> m_inports_idx2dirn;
     std::map<int, PortDirection> m_outports_idx2dirn;
     std::map<PortDirection, int> m_outports_dirn2idx;
+
+    // Phase 3: whether this router's 2-hop express links are currently active.
+    bool m_express_active = false;
 };
 
 } // namespace garnet

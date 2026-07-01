@@ -76,6 +76,12 @@ p.add_argument(
     default=2,
     help="1 = XY baseline (no express), 2 = custom express routing.",
 )
+p.add_argument(
+    "--express-active",
+    type=int,
+    default=0,
+    help="1 = express links active at start, 0 = inactive (baseline).",
+)
 args = p.parse_args()
 
 hc_srcs = [int(x) for x in args.high_crit_srcs.split(",") if x.strip() != ""]
@@ -90,6 +96,7 @@ cache_hierarchy = MESITwoLevelCacheNetwork(
     num_l2_banks=2,
     high_criticality_src_ids=hc_srcs,
     routing_algorithm=args.routing_algo,
+    express_active=bool(args.express_active),
 )
 
 generator = MixedRateLinearGenerator(

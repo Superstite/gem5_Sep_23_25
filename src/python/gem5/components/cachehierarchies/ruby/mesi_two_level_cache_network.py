@@ -72,6 +72,9 @@ class MESITwoLevelCacheNetwork(
         # Garnet routing algorithm: 1 = XY (no express links, baseline),
         # 2 = custom reconfigurable criticality-aware routing.
         routing_algorithm: int = 2,
+        # Phase 3: initial express-link activation (custom routing only).
+        # False = baseline (HC on base mesh); manager toggles at runtime.
+        express_active: bool = False,
     ):
         AbstractRubyCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
@@ -87,6 +90,7 @@ class MESITwoLevelCacheNetwork(
         self._num_l2_banks = num_l2_banks
         self._high_criticality_src_ids = high_criticality_src_ids
         self._routing_algorithm = routing_algorithm
+        self._express_active = express_active
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
 
@@ -105,6 +109,7 @@ class MESITwoLevelCacheNetwork(
         self.ruby_system.network = CustomMesh(self.ruby_system)
         # Configure custom Routing algorithm
         self.ruby_system.network.routing_algorithm = self._routing_algorithm
+        self.ruby_system.network.express_active = self._express_active
         print("Routing_Algorith=", self.ruby_system.network.routing_algorithm)
         self.ruby_system.network.number_of_virtual_networks = 5
         self.ruby_system.network.num_rows = 8
