@@ -75,6 +75,11 @@ class MESITwoLevelCacheNetwork(
         # Phase 3: initial express-link activation (custom routing only).
         # False = baseline (HC on base mesh); manager toggles at runtime.
         express_active: bool = False,
+        # Phase 4: runtime reconfiguration manager (auto-toggles express links).
+        reconfig_enable: bool = False,
+        reconfig_epoch: int = 5000,
+        reconfig_high_wm: int = 400,
+        reconfig_low_wm: int = 150,
     ):
         AbstractRubyCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
@@ -91,6 +96,10 @@ class MESITwoLevelCacheNetwork(
         self._high_criticality_src_ids = high_criticality_src_ids
         self._routing_algorithm = routing_algorithm
         self._express_active = express_active
+        self._reconfig_enable = reconfig_enable
+        self._reconfig_epoch = reconfig_epoch
+        self._reconfig_high_wm = reconfig_high_wm
+        self._reconfig_low_wm = reconfig_low_wm
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
 
@@ -110,6 +119,10 @@ class MESITwoLevelCacheNetwork(
         # Configure custom Routing algorithm
         self.ruby_system.network.routing_algorithm = self._routing_algorithm
         self.ruby_system.network.express_active = self._express_active
+        self.ruby_system.network.reconfig_enable = self._reconfig_enable
+        self.ruby_system.network.reconfig_epoch = self._reconfig_epoch
+        self.ruby_system.network.reconfig_high_wm = self._reconfig_high_wm
+        self.ruby_system.network.reconfig_low_wm = self._reconfig_low_wm
         print("Routing_Algorith=", self.ruby_system.network.routing_algorithm)
         self.ruby_system.network.number_of_virtual_networks = 5
         self.ruby_system.network.num_rows = 8

@@ -83,8 +83,10 @@ Router::wakeup()
     // Note: the credit update is happening before SA
     // buffer turnaround time =
     //     credit traversal (1-cycle) + SA (1-cycle) + Link Traversal (1-cycle)
-    // The minimum time required before a buffer entry (or virtual channel buffer) can be reused after a flit/packet leaves it. 
-    // It is essentially the delay between freeing a buffer slot and it becoming available again for new incoming data.
+    // The minimum time required before a buffer entry (or virtual channel
+    // buffer) can be reused after a flit/packet leaves it.
+    // It is essentially the delay between freeing a buffer slot and it
+    // becoming available again for new incoming data.
     // if we want the credit update to take place after SA, this loop should
     // be moved after the SA request
     for (int outport = 0; outport < m_output_unit.size(); outport++) {
@@ -163,6 +165,9 @@ Router::getInportDirection(int inport)
 int
 Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn)
 {
+    // Phase 4: count routed flits as a per-router congestion proxy consumed by
+    // the reconfiguration manager each epoch.
+    m_epoch_flit_count++;
     return routingUnit.outportCompute(route, inport, inport_dirn);
 }
 

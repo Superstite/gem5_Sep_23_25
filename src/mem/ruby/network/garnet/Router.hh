@@ -122,6 +122,15 @@ class Router : public BasicRouter, public Consumer
     void setExpressActive(bool a) { routingUnit.setExpressActive(a); }
     bool getExpressActive() const { return routingUnit.getExpressActive(); }
 
+    // Phase 4: read-and-reset the flits routed since the last epoch (the
+    // congestion proxy the reconfiguration manager samples).
+    uint64_t consumeEpochFlitCount()
+    {
+        uint64_t c = m_epoch_flit_count;
+        m_epoch_flit_count = 0;
+        return c;
+    }
+
     void grant_switch(int inport, flit *t_flit);
     void schedule_wakeup(Cycles time);
 
@@ -156,6 +165,9 @@ class Router : public BasicRouter, public Consumer
     RoutingUnit routingUnit;
     SwitchAllocator switchAllocator;
     CrossbarSwitch crossbarSwitch;
+
+    // Phase 4: flits routed by this router in the current reconfig epoch.
+    uint64_t m_epoch_flit_count = 0;
 
     std::vector<std::shared_ptr<InputUnit>> m_input_unit;
     std::vector<std::shared_ptr<OutputUnit>> m_output_unit;

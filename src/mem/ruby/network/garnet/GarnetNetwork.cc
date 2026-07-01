@@ -62,7 +62,12 @@ namespace garnet
  */
 
 GarnetNetwork::GarnetNetwork(const Params &p)
-    : Network(p)
+    : Network(p),
+      m_reconfig_event([this]{ reconfigStep(); }, name() + ".reconfig"),
+      m_reconfig_enable(p.reconfig_enable),
+      m_reconfig_epoch(p.reconfig_epoch),
+      m_reconfig_high_wm(p.reconfig_high_wm),
+      m_reconfig_low_wm(p.reconfig_low_wm)
 {
     m_num_rows = p.num_rows;
     m_ni_flit_size = p.ni_flit_size;
@@ -125,6 +130,36 @@ GarnetNetwork::setAllExpressActive(bool active)
     for (auto *router : m_routers) {
         router->setExpressActive(active);
     }
+}
+
+void
+GarnetNetwork::startup()
+{
+    // Kick off the periodic reconfiguration manager once simulation starts.
+    if (m_reconfig_enable) {
+        schedule(m_reconfig_event, clockEdge(m_reconfig_epoch));
+    }
+}
+
+void
+GarnetNetwork::reconfigStep()
+{
+    // Sample each router's flit throughput over the epoch and (de)activate its
+    // express links with hysteresis (high/low watermarks) to avoid thrashing.
+    for (int i = 0; i < (int)m_routers.size(); i++) {
+        uint64_t flits = m_routers[i]->consumeEpochFlitCount();
+        bool active = m_routers[i]->getExpressActive();
+        if (!active && flits >= m_reconfig_high_wm) {
+            m_routers[i]->setExpressActive(true);
+            DPRINTF(RubyNetwork, "RECONF_MGR R%d ACTIVATE flits=%llu\n",
+                    i, (unsigned long long)flits);
+        } else if (active && flits <= m_reconfig_low_wm) {
+            m_routers[i]->setExpressActive(false);
+            DPRINTF(RubyNetwork, "RECONF_MGR R%d DEACTIVATE flits=%llu\n",
+                    i, (unsigned long long)flits);
+        }
+    }
+    schedule(m_reconfig_event, clockEdge(m_reconfig_epoch));
 }
 
 void

@@ -39,6 +39,7 @@
 #include "mem/ruby/network/fault_model/FaultModel.hh"
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "params/GarnetNetwork.hh"
+#include "sim/eventq.hh"
 
 namespace gem5
 {
@@ -66,6 +67,9 @@ class GarnetNetwork : public Network
     ~GarnetNetwork() = default;
 
     void init();
+
+    // Phase 4: schedule the first reconfiguration epoch once the sim starts.
+    void startup() override;
 
     const char *garnetVersion = "3.0";
 
@@ -220,6 +224,20 @@ class GarnetNetwork : public Network
     std::vector<CreditLink *> m_creditlinks; // All credit links in the network
     std::vector<NetworkInterface *> m_nis;   // All NI's in Network
     int m_next_packet_id; // static vairable for packet id allocation
+
+    // Phase 4: runtime topology reconfiguration manager.
+    //
+    // Every m_reconfig_epoch cycles, reconfigStep() samples each router's flit
+    // throughput (a congestion proxy) and, with hysteresis, activates the
+    // router's 2-hop express links when throughput exceeds m_reconfig_high_wm
+    // and deactivates them below m_reconfig_low_wm -- offloading HC onto
+    // express links exactly where/when the mesh is congested.
+    void reconfigStep();
+    EventFunctionWrapper m_reconfig_event;
+    bool m_reconfig_enable;
+    Cycles m_reconfig_epoch;
+    uint64_t m_reconfig_high_wm;
+    uint64_t m_reconfig_low_wm;
 };
 
 inline std::ostream&

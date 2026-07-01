@@ -52,6 +52,19 @@ class GarnetNetwork(RubyNetwork):
         "Phase 3: initial activation state of 2-hop express links (custom "
         "routing). False = baseline; manager may toggle per-router at runtime.",
     )
+    reconfig_enable = Param.Bool(
+        False,
+        "Phase 4: enable the runtime express-link reconfiguration manager.",
+    )
+    reconfig_epoch = Param.Cycles(
+        5000, "Cycles between reconfiguration decisions."
+    )
+    reconfig_high_wm = Param.UInt64(
+        400, "Per-router flits/epoch above which express links activate."
+    )
+    reconfig_low_wm = Param.UInt64(
+        150, "Per-router flits/epoch below which express links deactivate."
+    )
     enable_fault_model = Param.Bool(False, "enable network fault model")
     fault_model = Param.FaultModel(NULL, "network fault model")
     garnet_deadlock_threshold = Param.UInt32(

@@ -82,6 +82,30 @@ p.add_argument(
     default=0,
     help="1 = express links active at start, 0 = inactive (baseline).",
 )
+p.add_argument(
+    "--reconfig",
+    type=int,
+    default=0,
+    help="1 = enable runtime reconfiguration manager (Phase 4).",
+)
+p.add_argument(
+    "--epoch",
+    type=int,
+    default=5000,
+    help="Reconfiguration decision interval in cycles.",
+)
+p.add_argument(
+    "--high-wm",
+    type=int,
+    default=400,
+    help="Flits/epoch/router to activate express links.",
+)
+p.add_argument(
+    "--low-wm",
+    type=int,
+    default=150,
+    help="Flits/epoch/router to deactivate express links.",
+)
 args = p.parse_args()
 
 hc_srcs = [int(x) for x in args.high_crit_srcs.split(",") if x.strip() != ""]
@@ -97,6 +121,10 @@ cache_hierarchy = MESITwoLevelCacheNetwork(
     high_criticality_src_ids=hc_srcs,
     routing_algorithm=args.routing_algo,
     express_active=bool(args.express_active),
+    reconfig_enable=bool(args.reconfig),
+    reconfig_epoch=args.epoch,
+    reconfig_high_wm=args.high_wm,
+    reconfig_low_wm=args.low_wm,
 )
 
 generator = MixedRateLinearGenerator(
