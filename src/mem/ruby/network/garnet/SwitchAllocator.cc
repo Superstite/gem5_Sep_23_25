@@ -297,7 +297,10 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
         // needs outvc
         // this is only true for HEAD and HEAD_TAIL flits.
 
-        if (output_unit->has_free_vc(vnet)) {
+        // Phase 7b: restrict to this flit's crit VC subset at MC routers.
+        int off_s, off_c;
+        critVcRange(inport, invc, off_s, off_c);
+        if (output_unit->has_free_vc(vnet, off_s, off_c)) {
 
             has_outvc = true;
 
@@ -341,14 +344,47 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
 int
 SwitchAllocator::vc_allocate(int outport, int inport, int invc)
 {
+    // Phase 7b: pick from this flit's criticality VC subset at MC routers
+    // (same window send_allowed already checked, so the assert below holds).
+    int off_s, off_c;
+    critVcRange(inport, invc, off_s, off_c);
     // Select a free VC from the output port
     int outvc =
-        m_router->getOutputUnit(outport)->select_free_vc(get_vnet(invc));
+        m_router->getOutputUnit(outport)->select_free_vc(get_vnet(invc),
+                                                         off_s, off_c);
 
     // has to get a valid VC since it checked before performing SA
     assert(outvc != -1);
     m_router->getInputUnit(inport)->grant_outvc(invc, outvc);
     return outvc;
+}
+
+// Phase 7b: eligible output-VC offset window within the vnet for the flit at
+// (inport, invc). At MC routers HC and LC get disjoint VC subsets (isolation);
+// elsewhere the full range.
+void
+SwitchAllocator::critVcRange(int inport, int invc,
+                             int &off_start, int &off_count)
+{
+    off_start = 0;
+    off_count = m_vc_per_vnet;
+
+    // Partition only at memory-controller (sink) routers with >=2 VCs.
+    if (!m_router->isMcRouter() || m_vc_per_vnet < 2)
+        return;
+
+    flit *t = m_router->getInputUnit(inport)->peekTopFlit(invc);
+    if (t == nullptr)
+        return;
+
+    int hc_count = m_vc_per_vnet / 2;  // HC = low half (VC0 kept as escape)
+    if (t->get_route().is_hc) {
+        off_start = 0;
+        off_count = hc_count;
+    } else {
+        off_start = hc_count;
+        off_count = m_vc_per_vnet - hc_count;
+    }
 }
 
 // Wakeup the router next cycle to perform SA again

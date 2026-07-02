@@ -67,8 +67,10 @@ class OutputUnit : public Consumer
     void decrement_credit(int out_vc);
     void increment_credit(int out_vc);
     bool has_credit(int out_vc);
-    bool has_free_vc(int vnet);
-    int select_free_vc(int vnet);
+    // Phase 7b: off_start/off_count restrict the search to a VC subset within
+    // the vnet (criticality partitioning at MC routers). Default = full range.
+    bool has_free_vc(int vnet, int off_start = 0, int off_count = -1);
+    int select_free_vc(int vnet, int off_start = 0, int off_count = -1);
 
     inline PortDirection get_direction() { return m_direction; }
 

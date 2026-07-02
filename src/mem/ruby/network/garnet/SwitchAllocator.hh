@@ -66,6 +66,12 @@ class SwitchAllocator : public Consumer
     bool send_allowed(int inport, int invc, int outport, int outvc);
     int vc_allocate(int outport, int inport, int invc);
 
+    // Phase 7b: eligible output-VC offset window within a vnet for the flit at
+    // (inport, invc). At MC routers, HC and LC flits get disjoint VC subsets
+    // (criticality isolation); elsewhere the full range. Phase 7c widens the
+    // HC window into the donor (LC) subset when VC merging is armed.
+    void critVcRange(int inport, int invc, int &off_start, int &off_count);
+
     inline double
     get_input_arbiter_activity()
     {

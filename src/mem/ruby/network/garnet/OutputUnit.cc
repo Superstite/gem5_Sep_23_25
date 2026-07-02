@@ -94,11 +94,16 @@ OutputUnit::has_credit(int out_vc)
 
 
 // Check if the output port (i.e., input port at next router) has free VCs.
+// Phase 7b: search limited to a VC offset window within the vnet (crit
+// partitioning at MC routers); off_count < 0 means the full range.
 bool
-OutputUnit::has_free_vc(int vnet)
+OutputUnit::has_free_vc(int vnet, int off_start, int off_count)
 {
+    if (off_count < 0)
+        off_count = m_vc_per_vnet;
     int vc_base = vnet*m_vc_per_vnet;
-    for (int vc = vc_base; vc < vc_base + m_vc_per_vnet; vc++) {
+    for (int off = off_start; off < off_start + off_count; off++) {
+        int vc = vc_base + off;
         if (is_vc_idle(vc, curTick()))
             return true;
     }
@@ -108,10 +113,13 @@ OutputUnit::has_free_vc(int vnet)
 
 // Assign a free output VC to the winner of Switch Allocation
 int
-OutputUnit::select_free_vc(int vnet)
+OutputUnit::select_free_vc(int vnet, int off_start, int off_count)
 {
+    if (off_count < 0)
+        off_count = m_vc_per_vnet;
     int vc_base = vnet*m_vc_per_vnet;
-    for (int vc = vc_base; vc < vc_base + m_vc_per_vnet; vc++) {
+    for (int off = off_start; off < off_start + off_count; off++) {
+        int vc = vc_base + off;
         if (is_vc_idle(vc, curTick())) {
             outVcState[vc].setState(ACTIVE_, curTick());
             return vc;
