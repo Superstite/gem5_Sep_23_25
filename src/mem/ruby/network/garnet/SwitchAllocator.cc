@@ -380,7 +380,10 @@ SwitchAllocator::critVcRange(int inport, int invc,
     int hc_count = m_vc_per_vnet / 2;  // HC = low half (VC0 kept as escape)
     if (t->get_route().is_hc) {
         off_start = 0;
-        off_count = hc_count;
+        // Phase 7c: when VC merging is armed, HC may borrow the donor (LC)
+        // subset too -> HC window widens to the full VC range (elastic
+        // isolation). LC stays confined, so HC always reclaims by preemption.
+        off_count = m_router->getVcMerge() ? m_vc_per_vnet : hc_count;
     } else {
         off_start = hc_count;
         off_count = m_vc_per_vnet - hc_count;

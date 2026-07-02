@@ -80,6 +80,10 @@ class MESITwoLevelCacheNetwork(
         reconfig_epoch: int = 5000,
         reconfig_high_wm: int = 400,
         reconfig_low_wm: int = 150,
+        # Phase 7c: elastic VC merging at MC routers (co-reconfiguration).
+        mc_merge_enable: bool = False,
+        mc_hc_hi: int = 80,
+        mc_lc_lo: int = 400,
     ):
         AbstractRubyCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
@@ -100,6 +104,9 @@ class MESITwoLevelCacheNetwork(
         self._reconfig_epoch = reconfig_epoch
         self._reconfig_high_wm = reconfig_high_wm
         self._reconfig_low_wm = reconfig_low_wm
+        self._mc_merge_enable = mc_merge_enable
+        self._mc_hc_hi = mc_hc_hi
+        self._mc_lc_lo = mc_lc_lo
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
 
@@ -230,6 +237,9 @@ class MESITwoLevelCacheNetwork(
             first_dir_loc,
             second_dir_loc,
         ]
+        self.ruby_system.network.mc_merge_enable = self._mc_merge_enable
+        self.ruby_system.network.mc_hc_hi = self._mc_hc_hi
+        self.ruby_system.network.mc_lc_lo = self._mc_lc_lo
         self.ruby_system.network.connectControllers(
             self._l1_controllers,
             self._l2_controllers,

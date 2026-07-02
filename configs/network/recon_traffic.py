@@ -106,6 +106,24 @@ p.add_argument(
     default=150,
     help="Flits/epoch/router to deactivate express links.",
 )
+p.add_argument(
+    "--mc-merge",
+    type=int,
+    default=0,
+    help="1 = enable elastic VC merging at MC routers (Phase 7c).",
+)
+p.add_argument(
+    "--mc-hc-hi",
+    type=int,
+    default=80,
+    help="F1: HC flits/epoch at MC router to arm VC merge.",
+)
+p.add_argument(
+    "--mc-lc-lo",
+    type=int,
+    default=400,
+    help="F2: LC flits/epoch below which the donor VC is idle.",
+)
 args = p.parse_args()
 
 hc_srcs = [int(x) for x in args.high_crit_srcs.split(",") if x.strip() != ""]
@@ -125,6 +143,9 @@ cache_hierarchy = MESITwoLevelCacheNetwork(
     reconfig_epoch=args.epoch,
     reconfig_high_wm=args.high_wm,
     reconfig_low_wm=args.low_wm,
+    mc_merge_enable=bool(args.mc_merge),
+    mc_hc_hi=args.mc_hc_hi,
+    mc_lc_lo=args.mc_lc_lo,
 )
 
 generator = MixedRateLinearGenerator(

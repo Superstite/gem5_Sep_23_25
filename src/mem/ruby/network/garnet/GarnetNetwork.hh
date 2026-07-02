@@ -260,6 +260,16 @@ class GarnetNetwork : public Network
     Cycles m_reconfig_epoch;
     uint64_t m_reconfig_high_wm;
     uint64_t m_reconfig_low_wm;
+
+    // Phase 7c: MC-router VC merge (elastic isolation). Armed when HC demand
+    // is high AND the donor (LC) VC is idle (two-factor gate); else disarmed.
+    bool m_mc_merge_enable;
+    uint64_t m_mc_hc_hi;   // F1: HC flits/epoch to arm merge
+    uint64_t m_mc_lc_lo;   // F2: LC flits/epoch below which donor is "idle"
+
+  public:
+    // Phase 7c: runtime VC-merge toggle at a memory-controller router.
+    void setMcVcMerge(int router_id, bool active);
 };
 
 inline std::ostream&

@@ -70,6 +70,17 @@ class GarnetNetwork(RubyNetwork):
         "Phase 7: router ids hosting a memory-controller (Directory) endpoint "
         "-- where HC funnels and the sink VC bottleneck forms.",
     )
+    mc_merge_enable = Param.Bool(
+        False,
+        "Phase 7c: enable elastic VC merging at MC routers (HC borrows the "
+        "idle donor VC under a two-factor burst-and-slack gate).",
+    )
+    mc_hc_hi = Param.UInt64(
+        80, "Phase 7c F1: HC flits/epoch at an MC router to arm VC merge."
+    )
+    mc_lc_lo = Param.UInt64(
+        400, "Phase 7c F2: LC flits/epoch below which the donor VC is idle."
+    )
     enable_fault_model = Param.Bool(False, "enable network fault model")
     fault_model = Param.FaultModel(NULL, "network fault model")
     garnet_deadlock_threshold = Param.UInt32(

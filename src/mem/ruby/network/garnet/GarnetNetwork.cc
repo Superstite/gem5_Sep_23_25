@@ -67,7 +67,10 @@ GarnetNetwork::GarnetNetwork(const Params &p)
       m_reconfig_enable(p.reconfig_enable),
       m_reconfig_epoch(p.reconfig_epoch),
       m_reconfig_high_wm(p.reconfig_high_wm),
-      m_reconfig_low_wm(p.reconfig_low_wm)
+      m_reconfig_low_wm(p.reconfig_low_wm),
+      m_mc_merge_enable(p.mc_merge_enable),
+      m_mc_hc_hi(p.mc_hc_hi),
+      m_mc_lc_lo(p.mc_lc_lo)
 {
     m_num_rows = p.num_rows;
     m_ni_flit_size = p.ni_flit_size;
@@ -139,10 +142,19 @@ GarnetNetwork::setAllExpressActive(bool active)
 }
 
 void
+GarnetNetwork::setMcVcMerge(int router_id, bool active)
+{
+    assert(router_id >= 0 && router_id < (int)m_routers.size());
+    m_routers[router_id]->setVcMerge(active);
+}
+
+void
 GarnetNetwork::startup()
 {
     // Kick off the periodic reconfiguration manager once simulation starts.
-    if (m_reconfig_enable) {
+    // Runs if either actuator is enabled: express-link reconfig (Phase 4) or
+    // MC-router VC merging (Phase 7c).
+    if (m_reconfig_enable || m_mc_merge_enable) {
         schedule(m_reconfig_event, clockEdge(m_reconfig_epoch));
     }
 }
@@ -154,15 +166,18 @@ GarnetNetwork::reconfigStep()
     // express links with hysteresis (high/low watermarks) to avoid thrashing.
     for (int i = 0; i < (int)m_routers.size(); i++) {
         uint64_t flits = m_routers[i]->consumeEpochFlitCount();
-        bool active = m_routers[i]->getExpressActive();
-        if (!active && flits >= m_reconfig_high_wm) {
-            m_routers[i]->setExpressActive(true);
-            DPRINTF(RubyNetwork, "RECONF_MGR R%d ACTIVATE flits=%llu\n",
-                    i, (unsigned long long)flits);
-        } else if (active && flits <= m_reconfig_low_wm) {
-            m_routers[i]->setExpressActive(false);
-            DPRINTF(RubyNetwork, "RECONF_MGR R%d DEACTIVATE flits=%llu\n",
-                    i, (unsigned long long)flits);
+        // Express-link actuator (Phase 4) -- only when express reconfig on.
+        if (m_reconfig_enable) {
+            bool active = m_routers[i]->getExpressActive();
+            if (!active && flits >= m_reconfig_high_wm) {
+                m_routers[i]->setExpressActive(true);
+                DPRINTF(RubyNetwork, "RECONF_MGR R%d ACTIVATE flits=%llu\n",
+                        i, (unsigned long long)flits);
+            } else if (active && flits <= m_reconfig_low_wm) {
+                m_routers[i]->setExpressActive(false);
+                DPRINTF(RubyNetwork, "RECONF_MGR R%d DEACTIVATE flits=%llu\n",
+                        i, (unsigned long long)flits);
+            }
         }
 
         // Phase 7a: two-factor sensing at memory-controller (sink) routers.
@@ -174,6 +189,25 @@ GarnetNetwork::reconfigStep()
             DPRINTF(RubyNetwork,
                     "RECONF_MC R%d hc=%llu lc=%llu\n",
                     i, (unsigned long long)hc, (unsigned long long)lc);
+
+            // Phase 7c: two-factor VC-merge gate (elastic isolation). Arm when
+            // HC demand is high (F1) AND the donor LC VC is idle (F2); disarm
+            // when either fails so LC reclaims its VC. HC always reclaims by
+            // preemption, so reclaim cost stays bounded (WCRT-safe).
+            if (m_mc_merge_enable) {
+                bool armed = m_routers[i]->getVcMerge();
+                if (!armed && hc >= m_mc_hc_hi && lc <= m_mc_lc_lo) {
+                    m_routers[i]->setVcMerge(true);
+                    DPRINTF(RubyNetwork,
+                            "RECONF_MERGE R%d ARM hc=%llu lc=%llu\n",
+                            i, (unsigned long long)hc, (unsigned long long)lc);
+                } else if (armed && (hc < m_mc_hc_hi || lc > m_mc_lc_lo)) {
+                    m_routers[i]->setVcMerge(false);
+                    DPRINTF(RubyNetwork,
+                            "RECONF_MERGE R%d DISARM hc=%llu lc=%llu\n",
+                            i, (unsigned long long)hc, (unsigned long long)lc);
+                }
+            }
         }
     }
     schedule(m_reconfig_event, clockEdge(m_reconfig_epoch));

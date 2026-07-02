@@ -136,6 +136,11 @@ class Router : public BasicRouter, public Consumer
     void setMcRouter(bool m) { m_is_mc_router = m; }
     bool isMcRouter() const { return m_is_mc_router; }
 
+    // Phase 7c: when armed, HC flits at this MC router may also allocate the
+    // donor (LC) VC subset -- elastic isolation relaxation. Default OFF.
+    void setVcMerge(bool m) { m_vc_merge_active = m; }
+    bool getVcMerge() const { return m_vc_merge_active; }
+
     // Phase 7a: read-and-reset HC / LC flits routed this epoch. HC = the
     // two-factor demand signal (F1); LC proxies donor-VC occupancy (F2).
     uint64_t consumeEpochHcFlitCount()
@@ -194,6 +199,9 @@ class Router : public BasicRouter, public Consumer
     bool m_is_mc_router = false;
     uint64_t m_epoch_hc_flits = 0;
     uint64_t m_epoch_lc_flits = 0;
+
+    // Phase 7c: HC-into-donor VC merge armed at this MC router.
+    bool m_vc_merge_active = false;
 
     std::vector<std::shared_ptr<InputUnit>> m_input_unit;
     std::vector<std::shared_ptr<OutputUnit>> m_output_unit;
