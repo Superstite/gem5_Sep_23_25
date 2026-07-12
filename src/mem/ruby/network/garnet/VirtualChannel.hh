@@ -95,6 +95,9 @@ class VirtualChannel
         return inputBuffer.getTopFlit();
     }
 
+    // Phase 7 eval: current input-buffer occupancy (flits queued in this VC).
+    inline int get_occupancy() const { return inputBuffer.getSize(); }
+
     bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *pkt);
 

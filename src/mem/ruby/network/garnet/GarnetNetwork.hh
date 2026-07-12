@@ -32,7 +32,10 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
 
+#include <fstream>
 #include <iostream>
+#include <random>
+#include <string>
 #include <vector>
 
 #include "mem/ruby/network/Network.hh"
@@ -260,6 +263,38 @@ class GarnetNetwork : public Network
     Cycles m_reconfig_epoch;
     uint64_t m_reconfig_high_wm;
     uint64_t m_reconfig_low_wm;
+
+    // Express-activation policy (see GarnetNetwork.py reconfig_policy).
+    // 0 = per-router flit threshold, 1 = global HC-onset broad activation,
+    // 2 = predictive (EWMA + leading-edge slope + persistence-derived hold).
+    int m_reconfig_policy;
+    uint64_t m_reconfig_hc_hi;     // global HC onset threshold
+    uint64_t m_reconfig_hc_lo;     // global HC release threshold
+    double m_reconfig_ewma_alpha;  // policy 2: EWMA smoothing
+    int m_reconfig_slope_hi;       // policy 2: leading-edge trigger
+    uint64_t m_reconfig_hold_epochs; // policy 2: MFDFA-sized hold length
+    // Predictor state (policy 2): smoothed HC demand + remaining hold epochs.
+    double m_hc_ewma = 0.0;
+    uint64_t m_hold_left = 0;
+    bool m_express_all_on = false;  // broad-activation state (policy 1/2)
+
+    // Policy 3: tabular Q-learning express controller.
+    bool m_rl_train;
+    std::string m_q_file;
+    double m_rl_lr, m_rl_eps, m_rl_gamma, m_rl_lambda, m_rl_occ_scale;
+    int m_rl_seed;
+    std::vector<double> m_qtable;      // NSTATES*NACT
+    std::mt19937 m_rl_rng;
+    int m_rl_prev_state = -1;          // previous (s,a) for the TD update
+    int m_rl_prev_action = 0;
+    uint64_t m_rl_since_burst = 0;     // recency: epochs since last HC burst
+    void rlStep(uint64_t global_hc);   // policy-3 controller (per epoch)
+    int rlState(uint64_t global_hc);   // encode discretised state
+    void rlLoadQ();
+    void rlSaveQ();
+
+    // Policy 4: oracle periodic burst schedule (all in ticks).
+    uint64_t m_sched_start, m_sched_period, m_sched_on, m_sched_lead;
 
     // Phase 7c: MC-router VC merge (elastic isolation). Armed when HC demand
     // is high AND the donor (LC) VC is idle (two-factor gate); else disarmed.

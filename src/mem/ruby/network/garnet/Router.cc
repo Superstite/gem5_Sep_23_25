@@ -38,6 +38,7 @@
 #include "mem/ruby/network/garnet/InputUnit.hh"
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 #include "mem/ruby/network/garnet/OutputUnit.hh"
+#include "mem/ruby/network/garnet/flit.hh"
 
 namespace gem5
 {
@@ -165,16 +166,19 @@ Router::getInportDirection(int inport)
 int
 Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn)
 {
-    // Phase 4: total flits this epoch (express-manager congestion proxy).
-    m_epoch_flit_count++;
-    // Phase 7a: at MC (sink) routers, split by criticality for the two-factor
-    // merge gate -- HC = demand (F1), LC = donor-VC occupancy (F2).
-    if (m_is_mc_router) {
-        if (route.is_hc) {
-            m_epoch_hc_flits++;
-        } else {
-            m_epoch_lc_flits++;
-        }
+    // Phase 4: total PACKETS routed this epoch (express-manager congestion
+    // proxy). route_compute runs once per packet (head/head-tail flit only),
+    // across all virtual networks, so this counts packets -- not flits.
+    m_epoch_packet_count++;
+    // Per-criticality PACKET counts this epoch. At MC (directory/hub) routers
+    // these feed the two-factor merge gate (HC = demand F1, LC = donor
+    // occupancy F2); summed network-wide they drive the global HC-onset
+    // policy (activate express broadly the moment HC demand rises, before the
+    // mesh congestion-collapses -- reactive per-router activation fires late).
+    if (route.is_hc) {
+        m_epoch_hc_packets++;
+    } else {
+        m_epoch_lc_packets++;
     }
     return routingUnit.outportCompute(route, inport, inport_dirn);
 }
@@ -183,6 +187,66 @@ void
 Router::grant_switch(int inport, flit *t_flit)
 {
     crossbarSwitch.update_sw_winner(inport, t_flit);
+}
+
+void
+Router::getCritVcOccupancy(uint64_t &hc_occ, uint64_t &donor_occ)
+{
+    // Phase 7 eval: match SwitchAllocator::critVcRange -- HC owns the low half
+    // of each vnet's VCs at MC routers; donor (LC) VC subset the high half.
+    hc_occ = 0;
+    donor_occ = 0;
+    int vpv = (int)m_vc_per_vnet;
+    int half = vpv / 2;
+    for (int p = 0; p < get_num_inports(); p++) {
+        InputUnit *iu = getInputUnit(p);
+        for (int vnet = 0; vnet < (int)m_virtual_networks; vnet++) {
+            for (int off = 0; off < vpv; off++) {
+                int occ = iu->get_vc_occupancy(vnet * vpv + off);
+                if (off < half)
+                    hc_occ += occ;
+                else
+                    donor_occ += occ;
+            }
+        }
+    }
+}
+
+uint64_t
+Router::getTotalOccupancy()
+{
+    // Sum input-buffer occupancy over all input ports and VCs -- a cheap
+    // network-congestion proxy for the RL controller's reward.
+    uint64_t occ = 0;
+    int nvc = (int)get_num_vcs();
+    for (int p = 0; p < get_num_inports(); p++) {
+        InputUnit *iu = getInputUnit(p);
+        for (int vc = 0; vc < nvc; vc++)
+            occ += iu->get_vc_occupancy(vc);
+    }
+    return occ;
+}
+
+uint64_t
+Router::getHcQueuedFlits()
+{
+    // HC-specific queueing: occupancy of VCs whose head flit is HC. Express
+    // relief shows up here (fewer HC flits backed up) but NOT in total
+    // occupancy (LC-dominated) -- so this is the RL reward's congestion term.
+    uint64_t q = 0;
+    int nvc = (int)get_num_vcs();
+    for (int p = 0; p < get_num_inports(); p++) {
+        InputUnit *iu = getInputUnit(p);
+        for (int vc = 0; vc < nvc; vc++) {
+            int occ = iu->get_vc_occupancy(vc);
+            if (occ == 0)
+                continue;
+            flit *t = iu->peekTopFlit(vc);
+            if (t != nullptr && t->get_route().is_hc)
+                q += occ;
+        }
+    }
+    return q;
 }
 
 void

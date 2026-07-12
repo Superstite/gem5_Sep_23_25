@@ -31,10 +31,12 @@
 
 #include "mem/ruby/network/garnet/GarnetNetwork.hh"
 
+#include <algorithm>
 #include <cassert>
 
 #include "base/cast.hh"
 #include "base/compiler.hh"
+#include "debug/ReconTrace.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
@@ -68,6 +70,24 @@ GarnetNetwork::GarnetNetwork(const Params &p)
       m_reconfig_epoch(p.reconfig_epoch),
       m_reconfig_high_wm(p.reconfig_high_wm),
       m_reconfig_low_wm(p.reconfig_low_wm),
+      m_reconfig_policy(p.reconfig_policy),
+      m_reconfig_hc_hi(p.reconfig_hc_hi),
+      m_reconfig_hc_lo(p.reconfig_hc_lo),
+      m_reconfig_ewma_alpha(p.reconfig_ewma_alpha),
+      m_reconfig_slope_hi(p.reconfig_slope_hi),
+      m_reconfig_hold_epochs(p.reconfig_hold_epochs),
+      m_rl_train(p.reconfig_rl_train),
+      m_q_file(p.reconfig_q_file),
+      m_rl_lr(p.reconfig_rl_lr),
+      m_rl_eps(p.reconfig_rl_eps),
+      m_rl_gamma(p.reconfig_rl_gamma),
+      m_rl_lambda(p.reconfig_rl_lambda),
+      m_rl_occ_scale(p.reconfig_rl_occ_scale),
+      m_rl_seed(p.reconfig_rl_seed),
+      m_sched_start(p.reconfig_sched_start),
+      m_sched_period(p.reconfig_sched_period),
+      m_sched_on(p.reconfig_sched_on),
+      m_sched_lead(p.reconfig_sched_lead),
       m_mc_merge_enable(p.mc_merge_enable),
       m_mc_hc_hi(p.mc_hc_hi),
       m_mc_lc_lo(p.mc_lc_lo)
@@ -151,6 +171,12 @@ GarnetNetwork::setMcVcMerge(int router_id, bool active)
 void
 GarnetNetwork::startup()
 {
+    // Policy 3 (RL): seed the RNG and load the Q-table (trained if deploying,
+    // zero-initialised if training from scratch).
+    if (m_reconfig_enable && m_reconfig_policy == 3) {
+        m_rl_rng.seed((uint32_t)m_rl_seed);
+        rlLoadQ();
+    }
     // Kick off the periodic reconfiguration manager once simulation starts.
     // Runs if either actuator is enabled: express-link reconfig (Phase 4) or
     // MC-router VC merging (Phase 7c).
@@ -162,38 +188,43 @@ GarnetNetwork::startup()
 void
 GarnetNetwork::reconfigStep()
 {
-    // Sample each router's flit throughput over the epoch and (de)activate its
-    // express links with hysteresis (high/low watermarks) to avoid thrashing.
+    // Sample every router this epoch, then actuate express per the chosen
+    // policy. Per-router HC/LC counts are summed network-wide to drive the
+    // global (policy 1) and predictive (policy 2) express activation.
+    uint64_t global_hc = 0;
     for (int i = 0; i < (int)m_routers.size(); i++) {
-        uint64_t flits = m_routers[i]->consumeEpochFlitCount();
-        // Express-link actuator (Phase 4) -- only when express reconfig on.
-        if (m_reconfig_enable) {
+        uint64_t packets = m_routers[i]->consumeEpochPacketCount();
+        uint64_t hc = m_routers[i]->consumeEpochHcPacketCount();
+        uint64_t lc = m_routers[i]->consumeEpochLcPacketCount();
+        global_hc += hc;
+
+        bool is_mc = m_routers[i]->isMcRouter();
+        uint64_t mc_hcocc = 0, mc_dnocc = 0;
+
+        // Policy 0 (legacy): per-router packet-threshold actuator with
+        // hysteresis. Reactive -- fires only after a router is already
+        // congested, i.e. after the mesh has begun to collapse. Kept for
+        // comparison.
+        if (m_reconfig_enable && m_reconfig_policy == 0) {
             bool active = m_routers[i]->getExpressActive();
-            if (!active && flits >= m_reconfig_high_wm) {
+            if (!active && packets >= m_reconfig_high_wm) {
                 m_routers[i]->setExpressActive(true);
-                DPRINTF(RubyNetwork, "RECONF_MGR R%d ACTIVATE flits=%llu\n",
-                        i, (unsigned long long)flits);
-            } else if (active && flits <= m_reconfig_low_wm) {
+                DPRINTF(RubyNetwork, "RECONF_MGR R%d ACTIVATE packets=%llu\n",
+                        i, (unsigned long long)packets);
+            } else if (active && packets <= m_reconfig_low_wm) {
                 m_routers[i]->setExpressActive(false);
-                DPRINTF(RubyNetwork, "RECONF_MGR R%d DEACTIVATE flits=%llu\n",
-                        i, (unsigned long long)flits);
+                DPRINTF(RubyNetwork,
+                        "RECONF_MGR R%d DEACTIVATE packets=%llu\n",
+                        i, (unsigned long long)packets);
             }
         }
 
-        // Phase 7a: two-factor sensing at memory-controller (sink) routers.
-        // hc = demand (F1), lc = donor-VC occupancy proxy (F2). Consumed every
-        // epoch (also resets the counters) so 7c can gate VC merging on them.
-        if (m_routers[i]->isMcRouter()) {
-            uint64_t hc = m_routers[i]->consumeEpochHcFlitCount();
-            uint64_t lc = m_routers[i]->consumeEpochLcFlitCount();
-            DPRINTF(RubyNetwork,
-                    "RECONF_MC R%d hc=%llu lc=%llu\n",
+        // Phase 7a/c: two-factor VC-merge sensing/gate at MC (directory/hub)
+        // routers.
+        if (is_mc) {
+            m_routers[i]->getCritVcOccupancy(mc_hcocc, mc_dnocc);
+            DPRINTF(RubyNetwork, "RECONF_MC R%d hc=%llu lc=%llu\n",
                     i, (unsigned long long)hc, (unsigned long long)lc);
-
-            // Phase 7c: two-factor VC-merge gate (elastic isolation). Arm when
-            // HC demand is high (F1) AND the donor LC VC is idle (F2); disarm
-            // when either fails so LC reclaims its VC. HC always reclaims by
-            // preemption, so reclaim cost stays bounded (WCRT-safe).
             if (m_mc_merge_enable) {
                 bool armed = m_routers[i]->getVcMerge();
                 if (!armed && hc >= m_mc_hc_hi && lc <= m_mc_lc_lo) {
@@ -209,8 +240,177 @@ GarnetNetwork::reconfigStep()
                 }
             }
         }
+
+        // Per-router congestion + express-state trace (real eval data).
+        // 'packets' = packets routed this epoch (all vnets); hc/lc = same,
+        // split by criticality; hcocc/dnocc = genuine per-VC flit occupancy.
+        DPRINTF(ReconTrace,
+                "RTRACE t=%llu R%d packets=%llu mc=%d hc=%llu lc=%llu "
+                "hcocc=%llu dnocc=%llu ex=%d\n",
+                (unsigned long long)curTick(), i,
+                (unsigned long long)packets, is_mc ? 1 : 0,
+                (unsigned long long)hc, (unsigned long long)lc,
+                (unsigned long long)mc_hcocc, (unsigned long long)mc_dnocc,
+                m_routers[i]->getExpressActive() ? 1 : 0);
     }
+
+    // Global express policies (decided once from network-wide HC demand).
+    if (m_reconfig_enable && m_reconfig_policy == 1) {
+        // Reactive-global: broad on/off by HC-demand watermarks. Broad + fine
+        // epoch beats per-router, but still crosses the threshold only after
+        // demand (and queueing) is already high.
+        if (!m_express_all_on && global_hc >= m_reconfig_hc_hi) {
+            setAllExpressActive(true); m_express_all_on = true;
+            DPRINTF(RubyNetwork, "RECONF_GLOBAL ON hc=%llu\n",
+                    (unsigned long long)global_hc);
+        } else if (m_express_all_on && global_hc <= m_reconfig_hc_lo) {
+            setAllExpressActive(false); m_express_all_on = false;
+            DPRINTF(RubyNetwork, "RECONF_GLOBAL OFF hc=%llu\n",
+                    (unsigned long long)global_hc);
+        }
+    } else if (m_reconfig_enable && m_reconfig_policy == 2) {
+        // Predictive: EWMA + leading-edge slope arm express on the burst's
+        // RISING edge (before the absolute threshold, before collapse); hold
+        // for m_reconfig_hold_epochs (sized offline from the HC trace's MFDFA
+        // persistence h(2)) so express stays on through the persistent burst,
+        // then releases in the gap. All O(1) -- no multifractal math here.
+        m_hc_ewma = (1.0 - m_reconfig_ewma_alpha) * m_hc_ewma +
+                    m_reconfig_ewma_alpha * (double)global_hc;
+        double slope = (double)global_hc - m_hc_ewma;
+        bool onset = (global_hc >= m_reconfig_hc_hi) ||
+                     (slope >= (double)m_reconfig_slope_hi);
+        if (onset) {
+            if (!m_express_all_on) {
+                setAllExpressActive(true); m_express_all_on = true;
+                DPRINTF(RubyNetwork,
+                        "RECONF_PRED ARM hc=%llu ewma=%.1f slope=%.1f\n",
+                        (unsigned long long)global_hc, m_hc_ewma, slope);
+            }
+            m_hold_left = m_reconfig_hold_epochs;   // (re)arm hold
+        } else if (m_hold_left > 0) {
+            m_hold_left--;                          // hold through the burst
+        } else if (m_express_all_on && global_hc <= m_reconfig_hc_lo) {
+            setAllExpressActive(false); m_express_all_on = false;
+            DPRINTF(RubyNetwork, "RECONF_PRED RELEASE hc=%llu\n",
+                    (unsigned long long)global_hc);
+        }
+    } else if (m_reconfig_enable && m_reconfig_policy == 3) {
+        rlStep(global_hc);
+    } else if (m_reconfig_enable && m_reconfig_policy == 4) {
+        // Oracle: express ON during the known periodic burst window (+lead).
+        // Upper bound on achievable HC-vs-duty with perfect foreknowledge.
+        bool on = false;
+        if (m_sched_period > 0 && curTick() >= m_sched_start) {
+            uint64_t phase = (curTick() - m_sched_start) % m_sched_period;
+            uint64_t lead_phase =
+                (phase + m_sched_lead) % m_sched_period;   // pre-arm shift
+            on = (phase < m_sched_on) || (lead_phase < m_sched_on);
+        }
+        if (on != m_express_all_on) {
+            setAllExpressActive(on);
+            m_express_all_on = on;
+        }
+    }
+
     schedule(m_reconfig_event, clockEdge(m_reconfig_epoch));
+}
+
+// ---- Policy 3: tabular Q-learning express controller ---------------------
+namespace {
+// State = demand(3) x slope(2) x recency(3) x express(2) = 36 states, 2 acts.
+constexpr int RL_NSTATES = 36;
+constexpr int RL_NACT = 2;
+}
+
+int
+GarnetNetwork::rlState(uint64_t global_hc)
+{
+    // demand bin (via the same hc_lo/hc_hi thresholds as policies 1/2)
+    int d = (global_hc <= m_reconfig_hc_lo) ? 0
+          : (global_hc >= m_reconfig_hc_hi) ? 2 : 1;
+    int s = ((double)global_hc > m_hc_ewma) ? 1 : 0;    // rising?
+    // recency: epochs since the last demand burst -> lets the policy learn a
+    // periodic burst cadence and pre-arm (anticipation slope trigger lacks)
+    int rec = (m_rl_since_burst <= 2) ? 0
+            : (m_rl_since_burst <= 15) ? 1 : 2;
+    int e = m_express_all_on ? 1 : 0;
+    return ((d * 2 + s) * 3 + rec) * 2 + e;
+}
+
+void
+GarnetNetwork::rlStep(uint64_t global_hc)
+{
+    // Update the slow EWMA + burst-recency features.
+    m_hc_ewma = (1.0 - m_reconfig_ewma_alpha) * m_hc_ewma +
+                m_reconfig_ewma_alpha * (double)global_hc;
+    if (global_hc >= m_reconfig_hc_hi)
+        m_rl_since_burst = 0;
+    else if (m_rl_since_burst < 1000000)
+        m_rl_since_burst++;
+
+    // Reward for the PREVIOUS (s,a): low HC congestion + low express cost.
+    // Congestion term is HC-SPECIFIC (flits in HC-headed VCs) -- express
+    // relieves HC but barely moves total (LC-dominated) occupancy, so a total-
+    // occupancy reward makes express look like pure cost -> RL turns it off.
+    uint64_t occ = 0;
+    for (auto *r : m_routers)
+        occ += r->getHcQueuedFlits();
+    double reward = -((double)occ / m_rl_occ_scale +
+                      m_rl_lambda * (m_express_all_on ? 1.0 : 0.0));
+
+    int s_now = rlState(global_hc);
+    // TD update Q[prev_s, prev_a] toward reward + gamma*max_a Q[s_now,a].
+    if (m_rl_train && m_rl_prev_state >= 0) {
+        double best_next = std::max(m_qtable[s_now * RL_NACT + 0],
+                                    m_qtable[s_now * RL_NACT + 1]);
+        double &q = m_qtable[m_rl_prev_state * RL_NACT + m_rl_prev_action];
+        q += m_rl_lr * (reward + m_rl_gamma * best_next - q);
+    }
+
+    // Choose action for s_now: eps-greedy while training, greedy when frozen.
+    int action;
+    double q0 = m_qtable[s_now * RL_NACT + 0];
+    double q1 = m_qtable[s_now * RL_NACT + 1];
+    std::uniform_real_distribution<double> uni(0.0, 1.0);
+    if (m_rl_train && uni(m_rl_rng) < m_rl_eps)
+        action = (uni(m_rl_rng) < 0.5) ? 1 : 0;
+    else
+        action = (q1 > q0) ? 1 : 0;
+
+    // Actuate express broadly per the chosen action.
+    bool want_on = (action == 1);
+    if (want_on != m_express_all_on) {
+        setAllExpressActive(want_on);
+        m_express_all_on = want_on;
+    }
+    DPRINTF(RubyNetwork, "RECONF_RL s=%d a=%d r=%.2f occ=%llu%s\n",
+            s_now, action, reward, (unsigned long long)occ,
+            m_rl_train ? " train" : " frozen");
+
+    m_rl_prev_state = s_now;
+    m_rl_prev_action = action;
+    if (m_rl_train && !m_q_file.empty())
+        rlSaveQ();   // persist online (72 doubles -- cheap)
+}
+
+void
+GarnetNetwork::rlLoadQ()
+{
+    m_qtable.assign(RL_NSTATES * RL_NACT, 0.0);
+    if (m_q_file.empty())
+        return;
+    std::ifstream in(m_q_file);
+    if (!in.good())
+        return;
+    for (int i = 0; i < RL_NSTATES * RL_NACT && in >> m_qtable[i]; i++) {}
+}
+
+void
+GarnetNetwork::rlSaveQ()
+{
+    std::ofstream out(m_q_file);
+    for (int i = 0; i < RL_NSTATES * RL_NACT; i++)
+        out << m_qtable[i] << (((i + 1) % RL_NACT == 0) ? '\n' : ' ');
 }
 
 void

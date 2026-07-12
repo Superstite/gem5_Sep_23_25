@@ -80,6 +80,28 @@ class MESITwoLevelCacheNetwork(
         reconfig_epoch: int = 5000,
         reconfig_high_wm: int = 400,
         reconfig_low_wm: int = 150,
+        # Express-activation policy: 0=per-router, 1=global HC-onset,
+        # 2=predictive (EWMA+slope+MFDFA-sized hold).
+        reconfig_policy: int = 0,
+        reconfig_hc_hi: int = 200,
+        reconfig_hc_lo: int = 60,
+        reconfig_ewma_alpha: float = 0.5,
+        reconfig_slope_hi: int = 40,
+        reconfig_hold_epochs: int = 8,
+        # Policy 3: RL (tabular Q-learning) express controller.
+        reconfig_rl_train: bool = False,
+        reconfig_q_file: str = "",
+        reconfig_rl_lr: float = 0.2,
+        reconfig_rl_eps: float = 0.2,
+        reconfig_rl_gamma: float = 0.9,
+        reconfig_rl_lambda: float = 0.5,
+        reconfig_rl_occ_scale: float = 100.0,
+        reconfig_rl_seed: int = 1,
+        # Policy 4: oracle periodic burst schedule (ticks).
+        reconfig_sched_start: int = 0,
+        reconfig_sched_period: int = 1,
+        reconfig_sched_on: int = 0,
+        reconfig_sched_lead: int = 0,
         # Phase 7c: elastic VC merging at MC routers (co-reconfiguration).
         mc_merge_enable: bool = False,
         mc_hc_hi: int = 80,
@@ -104,6 +126,24 @@ class MESITwoLevelCacheNetwork(
         self._reconfig_epoch = reconfig_epoch
         self._reconfig_high_wm = reconfig_high_wm
         self._reconfig_low_wm = reconfig_low_wm
+        self._reconfig_policy = reconfig_policy
+        self._reconfig_hc_hi = reconfig_hc_hi
+        self._reconfig_hc_lo = reconfig_hc_lo
+        self._reconfig_ewma_alpha = reconfig_ewma_alpha
+        self._reconfig_slope_hi = reconfig_slope_hi
+        self._reconfig_hold_epochs = reconfig_hold_epochs
+        self._reconfig_rl_train = reconfig_rl_train
+        self._reconfig_q_file = reconfig_q_file
+        self._reconfig_rl_lr = reconfig_rl_lr
+        self._reconfig_rl_eps = reconfig_rl_eps
+        self._reconfig_rl_gamma = reconfig_rl_gamma
+        self._reconfig_rl_lambda = reconfig_rl_lambda
+        self._reconfig_rl_occ_scale = reconfig_rl_occ_scale
+        self._reconfig_rl_seed = reconfig_rl_seed
+        self._reconfig_sched_start = reconfig_sched_start
+        self._reconfig_sched_period = reconfig_sched_period
+        self._reconfig_sched_on = reconfig_sched_on
+        self._reconfig_sched_lead = reconfig_sched_lead
         self._mc_merge_enable = mc_merge_enable
         self._mc_hc_hi = mc_hc_hi
         self._mc_lc_lo = mc_lc_lo
@@ -130,6 +170,36 @@ class MESITwoLevelCacheNetwork(
         self.ruby_system.network.reconfig_epoch = self._reconfig_epoch
         self.ruby_system.network.reconfig_high_wm = self._reconfig_high_wm
         self.ruby_system.network.reconfig_low_wm = self._reconfig_low_wm
+        self.ruby_system.network.reconfig_policy = self._reconfig_policy
+        self.ruby_system.network.reconfig_hc_hi = self._reconfig_hc_hi
+        self.ruby_system.network.reconfig_hc_lo = self._reconfig_hc_lo
+        self.ruby_system.network.reconfig_ewma_alpha = (
+            self._reconfig_ewma_alpha
+        )
+        self.ruby_system.network.reconfig_slope_hi = self._reconfig_slope_hi
+        self.ruby_system.network.reconfig_hold_epochs = (
+            self._reconfig_hold_epochs
+        )
+        self.ruby_system.network.reconfig_rl_train = self._reconfig_rl_train
+        self.ruby_system.network.reconfig_q_file = self._reconfig_q_file
+        self.ruby_system.network.reconfig_rl_lr = self._reconfig_rl_lr
+        self.ruby_system.network.reconfig_rl_eps = self._reconfig_rl_eps
+        self.ruby_system.network.reconfig_rl_gamma = self._reconfig_rl_gamma
+        self.ruby_system.network.reconfig_rl_lambda = self._reconfig_rl_lambda
+        self.ruby_system.network.reconfig_rl_occ_scale = (
+            self._reconfig_rl_occ_scale
+        )
+        self.ruby_system.network.reconfig_rl_seed = self._reconfig_rl_seed
+        self.ruby_system.network.reconfig_sched_start = (
+            self._reconfig_sched_start
+        )
+        self.ruby_system.network.reconfig_sched_period = (
+            self._reconfig_sched_period
+        )
+        self.ruby_system.network.reconfig_sched_on = self._reconfig_sched_on
+        self.ruby_system.network.reconfig_sched_lead = (
+            self._reconfig_sched_lead
+        )
         print("Routing_Algorith=", self.ruby_system.network.routing_algorithm)
         self.ruby_system.network.number_of_virtual_networks = 5
         self.ruby_system.network.num_rows = 8

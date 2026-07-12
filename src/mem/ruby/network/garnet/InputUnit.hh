@@ -131,6 +131,12 @@ class InputUnit : public Consumer
         return virtualChannels[invc].isReady(curTime);
     }
 
+    // Phase 7 eval: input-buffer occupancy of a given VC (flits queued).
+    inline int get_vc_occupancy(int vc) const
+    {
+        return virtualChannels[vc].get_occupancy();
+    }
+
     flitBuffer* getCreditQueue() { return &creditQueue; }
 
     inline void

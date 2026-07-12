@@ -359,9 +359,13 @@ SwitchAllocator::vc_allocate(int outport, int inport, int invc)
     return outvc;
 }
 
-// Phase 7b: eligible output-VC offset window within the vnet for the flit at
-// (inport, invc). At MC routers HC and LC get disjoint VC subsets (isolation);
-// elsewhere the full range.
+// Eligible output-VC offset window within the vnet for the flit at
+// (inport, invc). Starvation-study layout (needs >=4 VCs/vnet), applied
+// NETWORK-WIDE: VC0 = escape (reserved), VC1 = HC (single data VC),
+// VC2..VC3 = LC. HC is deliberately VC-starved (1 VC) below LC (2 VCs) so that
+// elastic VC merging at MC routers -- which lets HC borrow the LC subset --
+// has real headroom. When merge is armed at an MC router, HC widens to
+// {VC1,VC2,VC3}; LC stays confined to {VC2,VC3}, so HC reclaims by preemption.
 void
 SwitchAllocator::critVcRange(int inport, int invc,
                              int &off_start, int &off_count)
@@ -369,24 +373,20 @@ SwitchAllocator::critVcRange(int inport, int invc,
     off_start = 0;
     off_count = m_vc_per_vnet;
 
-    // Partition only at memory-controller (sink) routers with >=2 VCs.
-    if (!m_router->isMcRouter() || m_vc_per_vnet < 2)
+    if (m_vc_per_vnet < 4)             // layout requires >=4 VCs/vnet
         return;
 
     flit *t = m_router->getInputUnit(inport)->peekTopFlit(invc);
     if (t == nullptr)
         return;
 
-    int hc_count = m_vc_per_vnet / 2;  // HC = low half (VC0 kept as escape)
     if (t->get_route().is_hc) {
-        off_start = 0;
-        // Phase 7c: when VC merging is armed, HC may borrow the donor (LC)
-        // subset too -> HC window widens to the full VC range (elastic
-        // isolation). LC stays confined, so HC always reclaims by preemption.
-        off_count = m_router->getVcMerge() ? m_vc_per_vnet : hc_count;
+        off_start = 1;                 // HC data VC = VC1 (VC0 = escape)
+        bool merged = m_router->isMcRouter() && m_router->getVcMerge();
+        off_count = merged ? (m_vc_per_vnet - 1) : 1;  // 1 or 3 HC VCs
     } else {
-        off_start = hc_count;
-        off_count = m_vc_per_vnet - hc_count;
+        off_start = 2;                 // LC = VC2, VC3
+        off_count = 2;
     }
 }
 

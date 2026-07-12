@@ -65,6 +65,81 @@ class GarnetNetwork(RubyNetwork):
     reconfig_low_wm = Param.UInt64(
         150, "Per-router flits/epoch below which express links deactivate."
     )
+    reconfig_policy = Param.Int(
+        0,
+        "Express-activation policy. 0 = per-router flit-threshold (legacy, "
+        "reactive -- fires AFTER congestion collapse). 1 = global HC-onset: "
+        "activate express broadly when network-wide HC demand crosses "
+        "reconfig_hc_hi, release below reconfig_hc_lo (fine epoch, broad, "
+        "still reactive). 2 = predictive: EWMA + leading-edge slope trigger "
+        "with a persistence-derived hold, so express arms on the burst's "
+        "rising edge BEFORE collapse and holds through the (multifractally "
+        "persistent) burst, then releases in the gap (elastic). The EWMA/"
+        "hold/threshold constants are calibrated OFFLINE by MFDFA on the HC "
+        "trace; no multifractal math runs at simulation time.",
+    )
+    reconfig_hc_hi = Param.UInt64(
+        200, "Policy 1/2: network-wide HC flits/epoch onset threshold."
+    )
+    reconfig_hc_lo = Param.UInt64(
+        60, "Policy 1/2: network-wide HC flits/epoch release threshold."
+    )
+    reconfig_ewma_alpha = Param.Float(
+        0.5, "Policy 2: EWMA smoothing factor for global HC demand (0..1)."
+    )
+    reconfig_slope_hi = Param.Int(
+        40,
+        "Policy 2: leading-edge trigger -- arm express when (demand - EWMA) "
+        "rises past this (burst onset predicted before the threshold is even "
+        "reached).",
+    )
+    reconfig_hold_epochs = Param.UInt64(
+        8,
+        "Policy 2: epochs to hold express active after arming (hysteresis), "
+        "sized from the offline MFDFA persistence estimate h(2).",
+    )
+    # Policy 3: tabular Q-learning express controller. State = [HC-demand bin x
+    # slope sign x recency-since-last-burst x express-state]; action = express
+    # all-on/all-off; reward = -(network buffer occupancy + rl_lambda*on). A
+    # recency feature lets it ANTICIPATE periodic bursts (unlike EWMA/slope).
+    # Train once (eps-greedy, TD updates) -> dump Q; deploy frozen (greedy).
+    reconfig_rl_train = Param.Bool(
+        False,
+        "Policy 3: True = learn + write Q to reconfig_q_file; "
+        "False = load Q and act greedily (frozen).",
+    )
+    reconfig_q_file = Param.String(
+        "",
+        "Policy 3: path to the Q-table (written when training, read when "
+        "deploying).",
+    )
+    reconfig_rl_lr = Param.Float(0.2, "Policy 3: Q-learning rate.")
+    reconfig_rl_eps = Param.Float(0.2, "Policy 3: eps-greedy exploration.")
+    reconfig_rl_gamma = Param.Float(0.9, "Policy 3: discount factor.")
+    reconfig_rl_lambda = Param.Float(
+        0.5, "Policy 3: reward weight on express-on cost (duty penalty)."
+    )
+    reconfig_rl_occ_scale = Param.Float(
+        100.0,
+        "Policy 3: divisor normalising the occupancy term of the reward.",
+    )
+    reconfig_rl_seed = Param.Int(1, "Policy 3: RNG seed for eps-greedy.")
+    # Policy 4: ORACLE periodic schedule -- express ON during known burst
+    # windows (+ optional lead). Measures the best achievable HC-vs-duty point
+    # given perfect burst foreknowledge -> tells us if any predictor has room
+    # to beat the reactive controller.
+    reconfig_sched_start = Param.UInt64(
+        0, "Policy 4: ticks before the first burst window (warmup)."
+    )
+    reconfig_sched_period = Param.UInt64(
+        1, "Policy 4: burst period in ticks (burst+gap)."
+    )
+    reconfig_sched_on = Param.UInt64(
+        0, "Policy 4: express-ON width per period in ticks (burst length)."
+    )
+    reconfig_sched_lead = Param.UInt64(
+        0, "Policy 4: ticks to pre-arm express before each burst window."
+    )
     mc_router_ids = VectorParam.Int(
         [],
         "Phase 7: router ids hosting a memory-controller (Directory) endpoint "

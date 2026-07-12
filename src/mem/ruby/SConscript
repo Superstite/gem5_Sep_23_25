@@ -69,6 +69,10 @@ DebugFlag('RubyStats')
 DebugFlag('RubyResourceStalls')
 DebugFlag('RubyProtocol')
 DebugFlag('RubyHitMiss')
+# Phase 6/7 eval: per-router, per-epoch congestion trace emitted by
+# GarnetNetwork::reconfigStep() -- feeds the motivation figures. Kept separate
+# from RubyNetwork so the trace is not drowned by per-flit routing prints.
+DebugFlag('ReconTrace')
 
 CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyGenerated', 'RubySlicc', 'RubySystem', 'RubyCache',

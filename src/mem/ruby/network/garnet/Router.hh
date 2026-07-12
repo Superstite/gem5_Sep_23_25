@@ -122,12 +122,13 @@ class Router : public BasicRouter, public Consumer
     void setExpressActive(bool a) { routingUnit.setExpressActive(a); }
     bool getExpressActive() const { return routingUnit.getExpressActive(); }
 
-    // Phase 4: read-and-reset the flits routed since the last epoch (the
-    // congestion proxy the reconfiguration manager samples).
-    uint64_t consumeEpochFlitCount()
+    // Phase 4: read-and-reset the PACKETS routed since the last epoch (the
+    // congestion proxy the reconfiguration manager samples). Counted once per
+    // packet at route computation, across all virtual networks.
+    uint64_t consumeEpochPacketCount()
     {
-        uint64_t c = m_epoch_flit_count;
-        m_epoch_flit_count = 0;
+        uint64_t c = m_epoch_packet_count;
+        m_epoch_packet_count = 0;
         return c;
     }
 
@@ -141,18 +142,31 @@ class Router : public BasicRouter, public Consumer
     void setVcMerge(bool m) { m_vc_merge_active = m; }
     bool getVcMerge() const { return m_vc_merge_active; }
 
-    // Phase 7a: read-and-reset HC / LC flits routed this epoch. HC = the
+    // Phase 7 eval: snapshot input-buffer occupancy split by the Phase 7b
+    // criticality VC partition (HC = low half of each vnet's VCs, donor LC =
+    // high half), summed over all input ports/vnets. Shows the sink funnel:
+    // the HC VC subset saturates while the isolated donor VC subset sits idle.
+    void getCritVcOccupancy(uint64_t &hc_occ, uint64_t &donor_occ);
+
+    // Phase 8 (RL): total input-buffer occupancy (network-congestion proxy for
+    // the Q-learning controller's reward).
+    uint64_t getTotalOccupancy();
+    // HC-specific queued flits (occupancy of VCs whose head flit is HC) -- the
+    // congestion term express actually relieves; the RL reward uses this.
+    uint64_t getHcQueuedFlits();
+
+    // Phase 7a: read-and-reset HC / LC PACKETS routed this epoch. HC = the
     // two-factor demand signal (F1); LC proxies donor-VC occupancy (F2).
-    uint64_t consumeEpochHcFlitCount()
+    uint64_t consumeEpochHcPacketCount()
     {
-        uint64_t c = m_epoch_hc_flits;
-        m_epoch_hc_flits = 0;
+        uint64_t c = m_epoch_hc_packets;
+        m_epoch_hc_packets = 0;
         return c;
     }
-    uint64_t consumeEpochLcFlitCount()
+    uint64_t consumeEpochLcPacketCount()
     {
-        uint64_t c = m_epoch_lc_flits;
-        m_epoch_lc_flits = 0;
+        uint64_t c = m_epoch_lc_packets;
+        m_epoch_lc_packets = 0;
         return c;
     }
 
@@ -191,14 +205,14 @@ class Router : public BasicRouter, public Consumer
     SwitchAllocator switchAllocator;
     CrossbarSwitch crossbarSwitch;
 
-    // Phase 4: flits routed by this router in the current reconfig epoch.
-    uint64_t m_epoch_flit_count = 0;
+    // Phase 4: packets routed by this router in the current reconfig epoch.
+    uint64_t m_epoch_packet_count = 0;
 
-    // Phase 7a: memory-controller (sink) router flag + per-criticality epoch
-    // flit counts for the two-factor (demand x slack) merge gate.
+    // Phase 7a: memory-controller (directory) router flag + per-crit
+    // epoch PACKET counts for the two-factor (demand x slack) merge gate.
     bool m_is_mc_router = false;
-    uint64_t m_epoch_hc_flits = 0;
-    uint64_t m_epoch_lc_flits = 0;
+    uint64_t m_epoch_hc_packets = 0;
+    uint64_t m_epoch_lc_packets = 0;
 
     // Phase 7c: HC-into-donor VC merge armed at this MC router.
     bool m_vc_merge_active = false;
