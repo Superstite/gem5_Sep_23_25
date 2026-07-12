@@ -64,26 +64,31 @@ static PyMethodDef DSENTMethods[] = {
 };
 
 
+static struct PyModuleDef dsentmodule = {
+    PyModuleDef_HEAD_INIT, "dsent", NULL, -1, DSENTMethods
+};
+
 PyMODINIT_FUNC
-initdsent(void)
+PyInit_dsent(void)
 {
     PyObject *m;
 
-    m = Py_InitModule("dsent", DSENTMethods);
-    if (m == NULL) return;
+    m = PyModule_Create(&dsentmodule);
+    if (m == NULL) return NULL;
 
     DSENTError = PyErr_NewException("dsent.error", NULL, NULL);
     Py_INCREF(DSENTError);
     PyModule_AddObject(m, "error", DSENTError);
 
     ms_model = nullptr;
+    return m;
 }
 
 
 static PyObject *
 dsent_initialize(PyObject *self, PyObject *arg)
 {
-    const char *config_file = PyString_AsString(arg);
+    const char *config_file = PyUnicode_AsUTF8(arg);
     //Read the arguments sent from the python script
     if (!config_file) {
         Py_RETURN_NONE;
@@ -162,7 +167,7 @@ dsent_computeRouterPowerAndArea(PyObject *self, PyObject *args)
     // Prepare the output.  The assumption is that all the output
     for (const auto &it : outputs) {
         PyObject *s = PyTuple_New(2);
-        PyTuple_SetItem(s, 0, PyString_FromString(it.first.c_str()));
+        PyTuple_SetItem(s, 0, PyUnicode_FromString(it.first.c_str()));
         PyTuple_SetItem(s, 1, PyFloat_FromDouble(it.second));
 
         PyTuple_SetItem(r, index, s);
@@ -197,7 +202,7 @@ dsent_computeLinkPower(PyObject *self, PyObject *arg)
     // Prepare the output.  The assumption is that all the output
     for (const auto &it : outputs) {
         PyObject *s = PyTuple_New(2);
-        PyTuple_SetItem(s, 0, PyString_FromString(it.first.c_str()));
+        PyTuple_SetItem(s, 0, PyUnicode_FromString(it.first.c_str()));
         PyTuple_SetItem(s, 1, PyFloat_FromDouble(it.second));
 
         PyTuple_SetItem(r, index, s);
