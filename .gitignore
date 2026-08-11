@@ -10,6 +10,9 @@ cscope.out
 .*.swo
 m5out
 m5out_*
+m5rl_*
+m5real*
+thesis_figs
 .claude/
 /src/doxygen/html
 /docs/_build
