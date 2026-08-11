@@ -24,12 +24,25 @@ DIRS = [
 ]
 
 
+# Measured latencies (ticks) from the real MiBench runs, new VC layout, 50M
+# ticks -- fallback so the figure regenerates without the (regenerable, large)
+# m5realv_* sim dirs. Re-run recon_bench_run.py to refresh stats.txt.
+MEASURED = {
+    "m5realv_baseline": {"hc": 24105.072464, "lc": 71311.469896},
+    "m5realv_static": {"hc": 20538.046031, "lc": 71941.571735},
+    "m5realv_reactive": {"hc": 21168.137372, "lc": 71406.829315},
+}
+
+
 def lat(d, crit):
-    m = re.search(
-        rf"network.average_{crit}_packet_network_latency\s+([0-9.]+)",
-        open(f"{ROOT}/{d}/stats.txt").read(),
-    )
-    return float(m.group(1)) / TPC
+    p = f"{ROOT}/{d}/stats.txt"
+    if os.path.exists(p):
+        m = re.search(
+            rf"network.average_{crit}_packet_network_latency\s+([0-9.]+)",
+            open(p).read(),
+        )
+        return float(m.group(1)) / TPC
+    return MEASURED[d][crit] / TPC
 
 
 hc_abs = [lat(d, "hc") for _, d in DIRS]
@@ -56,8 +69,8 @@ plt.rcParams.update(
     }
 )
 FONT_AXIS, FONT_LEGEND = 15, 13
-RED, BLU = "#F5A623", "#1a53ff"  # HC = yellow-orange, LC = blue
-ANNOT = "#B36B00"  # dark orange for the % labels
+RED, BLU = "#B7410E", "#1a53ff"  # HC = rust, LC = blue
+ANNOT = "#B7410E"  # rust for the % labels
 
 x = np.arange(len(names))
 w = 0.38
@@ -84,14 +97,13 @@ b2 = ax.bar(
 )
 ax.bar_label(b1, fmt="%.2f", fontsize=14, fontweight="bold")
 ax.bar_label(b2, fmt="%.2f", fontsize=14, fontweight="bold")
-# HC change vs baseline
+# HC change vs baseline -- placed above the dashed 1.0 line (no overlap)
 for i in range(1, len(names)):
     ax.annotate(
         f"{100*(hc[i]-1):+.0f}%",
-        (i - w / 2, hc[i]),
-        textcoords="offset points",
-        xytext=(0, 16),
+        (i - w / 2, 1.06),
         ha="center",
+        va="bottom",
         fontsize=14,
         fontweight="bold",
         color=ANNOT,

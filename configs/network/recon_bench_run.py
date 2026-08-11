@@ -74,6 +74,47 @@ p.add_argument(
     help="Policy 1 reactive: global HC pkts/epoch release threshold.",
 )
 p.add_argument(
+    "--slope-hi",
+    type=int,
+    default=40,
+    help="Policy 2 predictive: leading-edge slope arm trigger.",
+)
+p.add_argument(
+    "--hold-epochs",
+    type=int,
+    default=8,
+    help="Policy 2 predictive: epochs to hold express on.",
+)
+p.add_argument(
+    "--ewma-alpha",
+    type=float,
+    default=0.5,
+    help="Policy 2/3: EWMA smoothing for global HC demand.",
+)
+p.add_argument(
+    "--rl-train",
+    type=int,
+    default=0,
+    help="Policy 3 RL: 1 = learn + write Q-table, 0 = frozen.",
+)
+p.add_argument(
+    "--q-file",
+    default="",
+    help="Policy 3 RL: Q-table path (write when training).",
+)
+p.add_argument(
+    "--rl-lambda",
+    type=float,
+    default=0.5,
+    help="Policy 3 RL: reward duty penalty weight.",
+)
+p.add_argument(
+    "--rl-occ-scale",
+    type=float,
+    default=100.0,
+    help="Policy 3 RL: occupancy reward normaliser.",
+)
+p.add_argument(
     "--mc-merge",
     type=int,
     default=0,
@@ -145,6 +186,13 @@ cache_hierarchy = MESITwoLevelCacheNetwork(
     reconfig_policy=args.reconfig_policy,
     reconfig_hc_hi=args.hc_hi,
     reconfig_hc_lo=args.hc_lo,
+    reconfig_slope_hi=args.slope_hi,
+    reconfig_hold_epochs=args.hold_epochs,
+    reconfig_ewma_alpha=args.ewma_alpha,
+    reconfig_rl_train=bool(args.rl_train),
+    reconfig_q_file=args.q_file,
+    reconfig_rl_lambda=args.rl_lambda,
+    reconfig_rl_occ_scale=args.rl_occ_scale,
     mc_merge_enable=bool(args.mc_merge),
     mc_hc_hi=args.mc_hc_hi,
     mc_lc_lo=args.mc_lc_lo,
